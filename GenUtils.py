@@ -110,6 +110,23 @@ class ParamsSectionFactory:
     # end horizontal_separator_params
 
     @staticmethod
+    def my_separator_params():
+        params = ParamsSection(
+            s_min_size=0.05,
+            s_max_size=0.1,
+            m_min_size=0.2,
+            m_max_size=0.3,
+            l_min_size=0.4,
+            l_max_size=0.6,
+            ss_limit=0.55,
+            sc_limit=0.62,
+            ms_limit=0.69,
+            mc_limit=0.87
+        )
+        return params
+    # end horizontal_separator_params
+
+    @staticmethod
     def horizontal_separator_params_normalized():
         params = ParamsSection(
             s_min_size=0.05,
@@ -141,6 +158,40 @@ class ParamsSectionFactory:
             mc_limit=0.7
         )
         return params
+   
+    @staticmethod
+    def poop():
+        params = ParamsSection(
+            s_min_size=0.05,
+            s_max_size=0.1,
+            m_min_size=0.2,
+            m_max_size=0.3,
+            l_min_size=0.4,
+            l_max_size=0.6,
+            ss_limit=0.05,
+            sc_limit=0.1,
+            ms_limit=0.4,
+            mc_limit=0.7
+        )
+        return params
+ 
+
+    @staticmethod
+    def beppy():
+        params = ParamsSection(
+                s_min_size = 0.01,
+                s_max_size = 0.3,
+                m_min_size = 1.5,
+                m_max_size = 1.7,
+                l_min_size = 2.8,
+                l_max_size = 3.99,
+                ss_limit = 2.4,
+                sc_limit = 4.6,
+                ms_limit = 6.9,
+                mc_limit = 10.99
+        )
+        return params
+
 # GenerateSectionParamsFactory
 
 
@@ -203,6 +254,13 @@ def gen_section_mesh(sequence: list, height: float, width: float) -> bpy.types.M
     return m
 # end generate_section_mesh
 
+def gen_simple_section_list( width, height ) -> list:
+
+    sequence = list()
+    element = SectionElement("square", width, height )
+    sequence.append(element)
+
+    return sequence
 
 def gen_section_element_list(params_section: ParamsSection) -> list:
     """

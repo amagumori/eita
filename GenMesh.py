@@ -195,7 +195,7 @@ class ParamsStairs:
 class ParamsWindows:
     def __init__(self, section_height: float, section_width: float, pillar_width: float, inner_depth: float,
                  outer_depth: float, frame_width: float, frame_depth: float, window_ratio: float,
-                 window_count: int, split_top: bool):
+                 window_count: int, split_top: bool, grid: bool, simple_section: bool):
         self.section_height = section_height
         self.section_width = section_width
         self.pillar_width = pillar_width
@@ -206,6 +206,8 @@ class ParamsWindows:
         self.window_ratio = window_ratio
         self.window_count = window_count
         self.split_top = split_top
+        self.grid = grid
+        self.simple_section = simple_section
     # end __init__
 
     @staticmethod
@@ -221,7 +223,9 @@ class ParamsWindows:
             properties.window_frame_depth,
             properties.window_ratio,
             properties.window_count,
-            properties.window_split_top
+            properties.window_split_top,
+            properties.window_grid,
+            properties.window_simple_section
         )
         return params
     # end from_ui
@@ -302,8 +306,7 @@ def gen_mesh_floor_separator(context: bpy.types.Context, footprint: list,
 
     # create a new object, link it to the scene and return it
     obj = bpy.data.objects.new("PBGFloorSeparator", m)
-    # 3.2: context.scene.objects becomes context.collection.objects
-    context.collection.objects.link(obj)
+    context.scene.objects.link(obj)
     return obj
 # end gen_mesh_floor_separator
 
@@ -438,10 +441,10 @@ def gen_mesh_pillar(context: bpy.types.Context, params_pillar: ParamsPillar, par
     # create object and link it to the scene, return the object
     obj = bpy.data.objects.get("PBGPillar")
     if obj is not None:
-        context.collection.objects.unlink(obj)
+        context.scene.objects.unlink(obj)
         bpy.data.objects.remove(obj)
     obj = bpy.data.objects.new("PBGPillar", m_pillar_extruded)
-    context.collection.objects.link(obj)
+    context.scene.objects.link(obj)
     return obj
 # end generate_pillars
 
@@ -467,7 +470,7 @@ def gen_mesh_wall(context: bpy.types.Context, wall_loops: list, section_mesh: bp
     # check if the object for walls already exists
     obj = bpy.data.objects.get("PBGWalls")
     if obj is not None:
-        context.collection.objects.unlink(obj)
+        context.scene.objects.unlink(obj)
         bpy.data.objects.remove(obj)
     # end if
 
@@ -477,7 +480,7 @@ def gen_mesh_wall(context: bpy.types.Context, wall_loops: list, section_mesh: bp
 
     # link the created object to the scene
     obj = bpy.data.objects.new("PBGWalls", m)
-    context.collection.objects.link(obj)
+    context.scene.objects.link(obj)
     return obj
 # end gen_mesh_walls
 
@@ -526,13 +529,13 @@ def gen_mesh_offset_wall(context: bpy.types.Context, footprint: list, params_gen
     # check if the object for walls already exists
     obj = bpy.data.objects.get("PBGOffset")
     if obj is not None:
-        context.collection.objects.unlink(obj)
+        context.scene.objects.unlink(obj)
         bpy.data.objects.remove(obj)
     # end if
 
     # link the created object to the scene
     obj = bpy.data.objects.new("PBGOffset", m_extruded)
-    context.collection.objects.link(obj)
+    context.scene.objects.link(obj)
     return obj
 # end gen_mesh_offset_wall
 
@@ -732,12 +735,12 @@ def gen_mesh_windows_above(context: bpy.types.Context, params_general: GenLayout
     bm.free()
     ob = bpy.data.objects.get("PBGWindowsAbove")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGWindowsAbove", m)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows_above
 
@@ -1005,12 +1008,12 @@ def gen_mesh_windows_under(context: bpy.types.Context, params_general: GenLayout
     windows_under_bmesh.free()
     ob = bpy.data.objects.get("PBGWindowsUnder")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGWindowsUnder", windows_under_mesh)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows_under
 
@@ -1058,12 +1061,12 @@ def gen_mesh_stairs(context: bpy.types.Context, params_general: GenLayout.Params
     bm.free()
     ob = bpy.data.objects.get("PBGStairs")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGStairs", m)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_stairs
 
@@ -1078,6 +1081,10 @@ def gen_mesh_windows_around(context: bpy.types.Context, params_general: GenLayou
                                      params_windows.section_width)
     # create layout
     layout = list()
+
+    ## as i understand it this is generating a plane parallel to the "floor"
+    ## like a windowsill.  this is what the profile is extruded along.
+    ## the "section" is a rect of sectionHxsectionW extruded along edges LAYOUT
     layout.append((-0.5 * params_general.window_width, -params_windows.inner_depth, 0.0))
     layout.append((-0.5 * params_general.window_width, params_windows.outer_depth, 0.0))
     layout.append((0.5 * params_general.window_width, params_windows.outer_depth, 0.0))
@@ -1146,12 +1153,12 @@ def gen_mesh_windows_around(context: bpy.types.Context, params_general: GenLayou
     bm.free()
     ob = bpy.data.objects.get("PBGWindowAround")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGWindowAround", m)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows_around
 
@@ -1159,14 +1166,20 @@ def gen_mesh_windows_around(context: bpy.types.Context, params_general: GenLayou
 def gen_mesh_windows(context: bpy.types.Context, params_general: GenLayout.ParamsGeneral,
                      params_windows: ParamsWindows):
     # keep windows and frame in separate bmesh?
+
     bm = bmesh.new()
     frame_width = params_general.window_width - 2*params_windows.pillar_width
     frame_height = params_general.window_height - 2*params_windows.section_height
+    ''' new
+    '''
     frame_window_width = frame_width / params_windows.window_count
 
     # create section
     params = GenUtils.ParamsSectionFactory.horizontal_separator_params_large()
-    sequence = GenUtils.gen_section_element_list(params)
+    if params_windows.simple_section == True:
+        sequence = GenUtils.gen_simple_section_list( params_windows.section_width, params_windows.section_height)
+    else:
+        sequence = GenUtils.gen_section_element_list(params)
     m_section = GenUtils.gen_section_mesh(sequence, params_windows.frame_width,
                                           params_windows.frame_depth)
     bm_section = bmesh.new()
@@ -1182,11 +1195,91 @@ def gen_mesh_windows(context: bpy.types.Context, params_general: GenLayout.Param
     # generate single layout for top and bottom, check for splits here
     layout_top = list()
     layout_bottom = list()
-
     m_bottom_glass = bpy.data.meshes.new("PBGWindowBottomGlass")
     m_top_glass = bpy.data.meshes.new("PBGWindowTopGlass")
     verts_bottom_glass = list()
     verts_top_glass = list()
+    #
+
+    if params_windows.grid == True:
+
+        layout = list()
+        m_grid_glass = bpy.data.meshes.new("WindowGridGlass")
+        verts_grid_glass = list()
+
+        print('hit')
+        frame_window_height = frame_height / params_windows.window_count
+        '''
+        layout.append( ( frame_width, frame_height, 0 ) )
+        layout.append( ( frame_width - frame_window_width, frame_height - frame_window_height, 0 ) ) 
+        layout.append( ( frame_width - frame_window_width, frame_height, 0 ) ) 
+        layout.append( ( frame_width, frame_height, 0 ) ) 
+        '''
+        layout.append( (0.5*frame_width, 0, 0 ) ) 
+        layout.append( (0.5*frame_width - frame_window_width, 0, 0 ) ) 
+        layout.append( (0.5*frame_width - frame_window_width, frame_window_height, 0 ) )
+        layout.append( (0.5*frame_width, frame_window_height, 0 ) )
+
+        print('layout: ', layout)
+
+        verts_grid_glass.append((layout[0][0] - params_windows.frame_width,
+                                 layout[0][1] + params_windows.frame_width, 0.0))
+        verts_grid_glass.append((layout[1][0] + params_windows.frame_width,
+                                 layout[1][1] + params_windows.frame_width, 0.0))
+        verts_grid_glass.append((layout[2][0] + params_windows.frame_width,
+                                 layout[2][1] - params_windows.frame_width, 0.0))
+        verts_grid_glass.append((layout[3][0] - params_windows.frame_width,
+                                 layout[2][1] - params_windows.frame_width, 0.0))
+
+        print(verts_grid_glass)
+
+        m_grid_glass.from_pydata( verts_grid_glass, [(0,1), (1,2), (2,3), (3,0)], [(0, 1, 2, 3)])
+        m_grid = Utils.extrude_along_edges(m_section.copy(), layout, True)
+
+        bm.from_mesh(m_grid_glass)
+        for face in bm.faces:
+            face.material_index = 1
+        bm.from_mesh(m_grid)
+
+        '''
+        duplicating and moving all the panes here.
+        '''
+        geom_orig = bm.verts[:] + bm.edges[:] + bm.faces[:]
+        for i in range(1, params_windows.window_count):
+            ret_dup = bmesh.ops.duplicate(bm, geom=geom_orig)
+            verts_to_translate_x = [ele for ele in ret_dup["geom"] if isinstance(ele, bmesh.types.BMVert)]
+            mat_loc = mathutils.Matrix.Translation((0.0,0.0,0.0))
+            vec_width_trans = ( -frame_window_width*i, 0, 0)
+            bmesh.ops.translate(bm, vec=vec_width_trans, verts=verts_to_translate_x, space=mat_loc)
+        # lol bumbo coder moment
+        geom_orig = bm.verts[:] + bm.edges[:] + bm.faces[:]
+        for i in range(1, params_windows.window_count):
+            dup = bmesh.ops.duplicate(bm, geom=geom_orig)
+            verts = [ele for ele in dup["geom"] if isinstance(ele, bmesh.types.BMVert)]
+            mat_loc = mathutils.Matrix.Translation((0.0,0.0,0.0))
+            vec_height_trans = ( 0, frame_window_height*i, 0 )
+            bmesh.ops.translate(bm, vec=vec_height_trans, verts=verts, space=mat_loc)
+
+        mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+        vec_trans = (0.0, -params_windows.inner_depth, params_general.window_offset + params_windows.section_height)
+        mat_rot = mathutils.Matrix.Rotation(math.radians(90), 3, "X")
+        bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=mat_rot, verts=bm.verts, space=mat_loc)
+        bmesh.ops.translate(bm, vec=vec_trans, space=mat_loc, verts=bm.verts)
+
+        # create object
+        m = bpy.data.meshes.new("BemppWindow")
+        bm.to_mesh(m)
+        bm.free()
+        ob = bpy.data.objects.get("BemppWindow")
+        if ob is not None:
+            context.scene.objects.unlink(ob)
+            bpy.data.objects.remove(ob)
+
+        # link the created object to the scene
+        new_obj = bpy.data.objects.new("beppyWindow", m)
+        context.scene.objects.link(new_obj)
+        return new_obj
+
 
     if params_windows.split_top == True:
         layout_top.append((0.5 * frame_width, frame_height*params_windows.window_ratio, 0))
@@ -1273,12 +1366,12 @@ def gen_mesh_windows(context: bpy.types.Context, params_general: GenLayout.Param
     bm.free()
     ob = bpy.data.objects.get("PBGWindow")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGWindow", m)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows
 
@@ -1397,21 +1490,19 @@ def gen_mesh_roof(context: bpy.types.Context, params_general: GenLayout.ParamsGe
     bm_roof.free()
     ob = bpy.data.objects.get("PBGRoof")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGRoof", m_roof)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_roof
 
 
 def uv_unwrap(bm):
-    
-    # 3.2
     uv_layer = bm.loops.layers.uv.verify()
-    # bm.faces.layers.tex.verify()  # currently blender needs both layers.
+    bm.faces.layers.tex.verify()  # currently blender needs both layers.
 
     # adjust UVs
     bm.verts.ensure_lookup_table()
@@ -1425,9 +1516,8 @@ def uv_unwrap(bm):
         mat_rot = mathutils.Matrix.Rotation(angle, 3, "Z")
         for loop in face.loops:
             loopuv = loop[uv_layer]
-            # 3.2 - @ operator instead of *
-            vert_proj = mat_proj @ loop.vert.co
-            vert_uv_co = mat_rot @ vert_proj
+            vert_proj = mat_proj * loop.vert.co
+            vert_uv_co = mat_rot * vert_proj
             uv = (vert_uv_co[1], vert_uv_co[2])
             loopuv.uv = uv
 
@@ -1462,12 +1552,12 @@ def gen_mesh_door_above(context: bpy.types.Context, params_general: GenLayout.Pa
     bm_wall_above.free()
     ob = bpy.data.objects.get("PGBDoorAbove")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PGBDoorAbove", m_door_above)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_door_above
 
@@ -1540,12 +1630,12 @@ def gen_mesh_door_around(context: bpy.types.Context, params_general: GenLayout.P
     bm.free()
     ob = bpy.data.objects.get("PBGDoorAround")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGDoorAround", m)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_door_around
 
@@ -1663,11 +1753,11 @@ def gen_mesh_door(context: bpy.types.Context, params_general: GenLayout.ParamsGe
     bm.free()
     ob = bpy.data.objects.get("PBGDoorComplete")
     if ob is not None:
-        context.collection.objects.unlink(ob)
+        context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGDoorComplete", m)
-    context.collection.objects.link(new_obj)
+    context.scene.objects.link(new_obj)
     return new_obj
 # end gen_mesh_door
