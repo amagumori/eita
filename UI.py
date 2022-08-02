@@ -25,112 +25,112 @@ from bpy.props import FloatProperty, BoolProperty, EnumProperty, IntProperty
 class PBGPropertyGroup(PropertyGroup):
     # TODO: docstring
 
-    building_width = FloatProperty(
+    building_width : FloatProperty(
         name="Building width",
         default=25.0
     )
 
-    building_depth = FloatProperty(
+    building_depth : FloatProperty(
         name="Building depth",
         default=15.0
     )
 
-    building_chamfer = FloatProperty(
+    building_chamfer : FloatProperty(
         name="Chamfer size",
         default=1
     )
 
-    building_wedge_depth = FloatProperty(
+    building_wedge_depth : FloatProperty(
         name="Wedge depth",
         default=1.5
     )
 
-    building_wedge_width = FloatProperty(
+    building_wedge_width : FloatProperty(
         name="Wedge width",
         default=8
     )
 
-    floor_first_offset = FloatProperty(
+    floor_first_offset : FloatProperty(
         name="FIrst floor offset",
         default=0.7
     )
 
-    floor_height = FloatProperty(
+    floor_height : FloatProperty(
         name="Floor height",
         default=3
     )
 
-    floor_count = IntProperty(
+    floor_count : IntProperty(
         name="Number of floors",
         default=2
     )
 
-    floor_separator_include = BoolProperty(
+    floor_separator_include : BoolProperty(
         name="Separator between floors",
         default=True
     )
 
-    floor_separator_height = FloatProperty(
+    floor_separator_height : FloatProperty(
         name="Separator height",
         default=0.2
     )
 
-    floor_separator_width = FloatProperty(
+    floor_separator_width : FloatProperty(
         name="Separator width",
         default=0.2
     )
 
-    window_width = FloatProperty(
+    window_width : FloatProperty(
         name="Total window width",
         default=1.2
     )
 
-    distance_window_window = FloatProperty(
+    distance_window_window : FloatProperty(
         name="Distance between windows",
         default=2.5
     )
 
-    generate_pillar = BoolProperty(
+    generate_pillar : BoolProperty(
         name="Generate Pillar",
         default=True
     )
 
-    distance_window_pillar = FloatProperty(
+    distance_window_pillar : FloatProperty(
         name="Distance Window to Pillar",
         default=0.8
     )
 
-    pillar_width = FloatProperty(
+    pillar_width : FloatProperty(
         name="Pillar width",
         default=0.2
     )
 
-    pillar_depth = FloatProperty(
+    pillar_depth : FloatProperty(
         name="Pillar depth",
         default=0.15
     )
 
-    pillar_chamfer = FloatProperty(
+    pillar_chamfer : FloatProperty(
         name="Pillar Chamfer",
         default=0.05
     )
 
-    pillar_offset_height = FloatProperty(
+    pillar_offset_height : FloatProperty(
         name="Pillar Offset Height",
         default=0.7
     )
 
-    pillar_offset_size = FloatProperty(
+    pillar_offset_size : FloatProperty(
         name="Pillar Offset Size",
         default=0.05
     )
 
-    pillar_include_floor_separator = BoolProperty(
+    pillar_include_floor_separator : BoolProperty(
         name="Include floor separator",
         default=True
     )
 
-    pillar_include_first_floor = BoolProperty(
+    pillar_include_first_floor : BoolProperty(
         name="Include first floor",
         default=True
     )
@@ -140,57 +140,57 @@ class PBGPropertyGroup(PropertyGroup):
         ("ROWS", "ROWS", "", 1)
     ]
 
-    wall_type = EnumProperty(
+    wall_type : EnumProperty(
         items=wall_types,
         default="ROWS"
     )
 
-    wall_mortar_size = FloatProperty(
+    wall_mortar_size : FloatProperty(
         name="Mortar size",
         default=0.01
     )
 
-    wall_section_size = FloatProperty(
+    wall_section_size : FloatProperty(
         name="Brick section size",
         default=0.02
     )
 
-    wall_row_count = IntProperty(
+    wall_row_count : IntProperty(
         name="Rows per floor",
         default=7
     )
 
-    wall_offset_size = FloatProperty(
+    wall_offset_size : FloatProperty(
         name="Wall offset size",
         default=0.1
     )
 
-    wall_offset_type = EnumProperty(
+    wall_offset_type : EnumProperty(
         items=wall_types,
         default="ROWS"
     )
 
-    wall_offset_mortar_size = FloatProperty(
+    wall_offset_mortar_size : FloatProperty(
         name="Offset Mortar size",
         default=0.02
     )
 
-    wall_offset_section_size = FloatProperty(
+    wall_offset_section_size : FloatProperty(
         name="Offset Brick section size",
         default=0.03
     )
 
-    wall_offset_row_count = IntProperty(
+    wall_offset_row_count : IntProperty(
         name="Offset Rows per floor",
         default=3
     )
 
-    window_height = FloatProperty(
+    window_height : FloatProperty(
         name="Window total height",
         default=1.7
     )
 
-    window_offset = FloatProperty(
+    window_offset : FloatProperty(
         name="Window offset",
         default=0.7
     )
@@ -203,67 +203,67 @@ class PBGPropertyGroup(PropertyGroup):
         ("CYCLOID", "CYCLOID", "", 4)
     ]
 
-    windows_under_type = EnumProperty(
+    windows_under_type : EnumProperty(
         items=window_under_types,
         default="WALL"
     )
 
-    windows_under_width = FloatProperty(
+    windows_under_width : FloatProperty(
         name="under window offset width",
         default=0.1
     )
 
-    windows_under_height = FloatProperty(
+    windows_under_height : FloatProperty(
         name="Under Window offset height",
         default=0.1
     )
 
-    windows_under_depth = FloatProperty(
+    windows_under_depth : FloatProperty(
         name="under Window offset depth",
         default=0.05
     )
 
-    windows_under_inset_depth = FloatProperty(
+    windows_under_inset_depth : FloatProperty(
         name="under Window inset depth",
         default=0.1
     )
 
-    windows_under_amplitude = FloatProperty(
+    windows_under_amplitude : FloatProperty(
         name="under Window amplitude",
         default=0.05
     )
 
-    windows_under_period_count = IntProperty(
+    windows_under_period_count : IntProperty(
         name="under Window period count",
         default=8
     )
 
-    windows_under_simple_width = FloatProperty(
+    windows_under_simple_width : FloatProperty(
         name="Under window simple width",
         default=0.04
     )
 
-    windows_under_simple_depth = FloatProperty(
+    windows_under_simple_depth : FloatProperty(
         name="Under window simple depth",
         default=0.03
     )
 
-    windows_under_pillar_base_diameter = FloatProperty(
+    windows_under_pillar_base_diameter : FloatProperty(
         name="Under window pillar base diameter",
         default=0.08
     )
 
-    windows_under_pillar_base_height = FloatProperty(
+    windows_under_pillar_base_height : FloatProperty(
         name="Under window pillar base height",
         default=0.04
     )
 
-    windows_under_pillar_min_diameter = FloatProperty(
+    windows_under_pillar_min_diameter : FloatProperty(
         name="Under window pillar min diameter",
         default=0.05
     )
 
-    windows_under_pillar_max_diameter = FloatProperty(
+    windows_under_pillar_max_diameter : FloatProperty(
         name="Under window pillar max diameter",
         default=0.08
     )
@@ -275,202 +275,202 @@ class PBGPropertyGroup(PropertyGroup):
         ("CYCLOID", "CYCLOID", "", 3)
     ]
 
-    windows_above_type = EnumProperty(
+    windows_above_type : EnumProperty(
         items=window_above_types,
         default="WALL"
     )
 
-    windows_above_width = FloatProperty(
+    windows_above_width : FloatProperty(
         name="under window offset width",
         default=0.1
     )
 
-    windows_above_height = FloatProperty(
+    windows_above_height : FloatProperty(
         name="Under Window offset height",
         default=0.1
     )
 
-    windows_above_depth = FloatProperty(
+    windows_above_depth : FloatProperty(
         name="under Window offset depth",
         default=0.05
     )
 
-    windows_above_inset_depth = FloatProperty(
+    windows_above_inset_depth : FloatProperty(
         name="under Window inset depth",
         default=0.1
     )
 
-    windows_above_amplitude = FloatProperty(
+    windows_above_amplitude : FloatProperty(
         name="under Window amplitude",
         default=0.05
     )
 
-    windows_above_period_count = IntProperty(
+    windows_above_period_count : IntProperty(
         name="under Window period count",
         default=8
     )
 
-    windows_above_simple_width = FloatProperty(
+    windows_above_simple_width : FloatProperty(
         name="Under window simple width",
         default=0.04
     )
 
-    windows_above_simple_depth = FloatProperty(
+    windows_above_simple_depth : FloatProperty(
         name="Under window simple depth",
         default=0.03
     )
 
-    stairs_layout_width = FloatProperty(
+    stairs_layout_width : FloatProperty(
         name="Stairs width",
         default=9.0
     )
 
-    stairs_layout_depth = FloatProperty(
+    stairs_layout_depth : FloatProperty(
         name="Stairs depth",
         default=2.0
     )
 
-    stairs_stair_count = IntProperty(
+    stairs_stair_count : IntProperty(
         name="stair count",
         default=4
     )
 
-    stairs_width = FloatProperty(
+    stairs_width : FloatProperty(
         name="stair width",
         default=0.25
     )
 
-    windows_around_section_height = FloatProperty(
+    windows_around_section_height : FloatProperty(
         name="Window around section height",
         default=0.15
     )
 
-    windows_around_section_width = FloatProperty(
+    windows_around_section_width : FloatProperty(
         name="Window around section width",
         default=0.1
     )
 
-    windows_around_pillar_width = FloatProperty(
+    windows_around_pillar_width : FloatProperty(
         name="Window around pillar width",
         default=0.1
     )
 
-    windows_around_inner_depth = FloatProperty(
+    windows_around_inner_depth : FloatProperty(
         name="Window around inner depth",
         default=0.05
     )
 
-    windows_around_outer_depth = FloatProperty(
+    windows_around_outer_depth : FloatProperty(
         name="Window around outer depth",
         default=0.03
     )
 
-    window_frame_width = FloatProperty(
+    window_frame_width : FloatProperty(
         name="Window frame width",
         default=0.03
     )
 
-    window_frame_depth = FloatProperty(
+    window_frame_depth : FloatProperty(
         name="Window frame depth",
         default=0.03
     )
 
-    window_ratio = FloatProperty(
+    window_ratio : FloatProperty(
         name="Window ratio",
         default=0.7
     )
 
-    window_count = IntProperty(
+    window_count : IntProperty(
         name="window count",
         default=2
     )
 
-    window_grid = BoolProperty(
+    window_grid : BoolProperty(
             name="grid window?",
             default=False
     )
 
-    window_simple_section = BoolProperty(
+    window_simple_section : BoolProperty(
             name="simple section type",
             default=False
     )
 
-    window_split_top = BoolProperty(
+    window_split_top : BoolProperty(
         name="window split top",
         default=False
     )
 
-    roof_offset_width = FloatProperty(
+    roof_offset_width : FloatProperty(
         name="roof offset width",
         default=4.0
     )
 
-    roof_offset_wedge = FloatProperty(
+    roof_offset_wedge : FloatProperty(
         name="roof offset wedge",
         default=7.5
     )
 
-    roof_height = FloatProperty(
+    roof_height : FloatProperty(
         name="roof height",
         default=3.0
     )
 
-    door_width = FloatProperty(
+    door_width : FloatProperty(
         name="Door width",
         default=2.0
     )
 
-    door_height = FloatProperty(
+    door_height : FloatProperty(
         name="Door height",
         default=2.5
     )
 
-    door_around_section_height = FloatProperty(
+    door_around_section_height : FloatProperty(
         name="Door around section height",
         default=0.2
     )
 
-    door_around_section_width = FloatProperty(
+    door_around_section_width : FloatProperty(
         name="Door around section width",
         default=0.15
     )
 
-    door_around_pillar_width = FloatProperty(
+    door_around_pillar_width : FloatProperty(
         name="Door around pillar width",
         default=0.15
     )
 
-    door_around_inner_depth = FloatProperty(
+    door_around_inner_depth : FloatProperty(
         name="Door around inner depth",
         default=0.1
     )
 
-    door_around_outer_depth = FloatProperty(
+    door_around_outer_depth : FloatProperty(
         name="Door around outer depth",
         default=0.03
     )
 
-    door_spacing = FloatProperty(
+    door_spacing : FloatProperty(
         name="Door spacing",
         default=0.1
     )
 
-    door_count_x = IntProperty(
+    door_count_x : IntProperty(
         name="Door count x",
         default=2
     )
 
-    door_count_z = IntProperty(
+    door_count_z : IntProperty(
         name="Door count x",
         default=5
     )
 
-    door_block_depth = FloatProperty(
+    door_block_depth : FloatProperty(
         name="Door block depth",
         default=0.07
     )
 
-    door_block_width = FloatProperty(
+    door_block_width : FloatProperty(
         name="Door block width",
         default=0.05
     )
@@ -481,7 +481,7 @@ class PBGPropertyGroup(PropertyGroup):
 class PBGToolbarGeneralPanel(Panel):
     # TODO: docstring
     bl_label = "General Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -512,7 +512,7 @@ class PBGToolbarGeneralPanel(Panel):
 class PBGToolbarLayoutPanel(Panel):
     # TODO: docstring
     bl_label = "Layout Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -531,7 +531,7 @@ class PBGToolbarLayoutPanel(Panel):
 class PBGToolbarPillarPanel(Panel):
     # TODO: docstring
     bl_label = "Pillar Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -556,7 +556,7 @@ class PBGToolbarPillarPanel(Panel):
 class PBGToolbarWallPanel(Panel):
     # TODO: docstring
     bl_label = "Wall settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -584,7 +584,7 @@ class PBGToolbarWallPanel(Panel):
 
 class PBGToolbarWindowPanel(Panel):
     bl_label = "Window Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -619,7 +619,7 @@ class PBGToolbarWindowPanel(Panel):
 
 class PBGToolbarWindowUnderPanel(Panel):
     bl_label = "Window Under Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -654,7 +654,7 @@ class PBGToolbarWindowUnderPanel(Panel):
 
 class PBGToolbarWindowAbovePanel(Panel):
     bl_label = "Window Above Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -684,7 +684,7 @@ class PBGToolbarWindowAbovePanel(Panel):
 
 class PBGToolbarStairsPanel(Panel):
     bl_label = "Stairs Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -705,7 +705,7 @@ class PBGToolbarStairsPanel(Panel):
 
 class PBGToolbarRoofPanel(Panel):
     bl_label = "Roof Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -725,7 +725,7 @@ class PBGToolbarRoofPanel(Panel):
 
 class PBGToolbarDoorPanel(Panel):
     bl_label = "Door Settings"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -757,7 +757,7 @@ class PBGToolbarDoorPanel(Panel):
 class PBGToolbarGeneratePanel(Panel):
     # TODO: docstring
     bl_label = "Generate"
-    bl_category = "PBG"
+    bl_category = ""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -771,7 +771,7 @@ class PBGToolbarGeneratePanel(Panel):
 
 class PBGToolbarMyGeneratePanel(Panel):
     bl_label="peepee poopoo"
-    bl_category="PBG"
+    bl_category=""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"

@@ -306,7 +306,7 @@ def gen_mesh_floor_separator(context: bpy.types.Context, footprint: list,
 
     # create a new object, link it to the scene and return it
     obj = bpy.data.objects.new("PBGFloorSeparator", m)
-    context.scene.objects.link(obj)
+    context.collection.objects.link(obj)
     return obj
 # end gen_mesh_floor_separator
 
@@ -441,10 +441,10 @@ def gen_mesh_pillar(context: bpy.types.Context, params_pillar: ParamsPillar, par
     # create object and link it to the scene, return the object
     obj = bpy.data.objects.get("PBGPillar")
     if obj is not None:
-        context.scene.objects.unlink(obj)
+        #context.scene.objects.unlink(obj)
         bpy.data.objects.remove(obj)
     obj = bpy.data.objects.new("PBGPillar", m_pillar_extruded)
-    context.scene.objects.link(obj)
+    context.scene.collection.objects.link(obj)
     return obj
 # end generate_pillars
 
@@ -470,7 +470,7 @@ def gen_mesh_wall(context: bpy.types.Context, wall_loops: list, section_mesh: bp
     # check if the object for walls already exists
     obj = bpy.data.objects.get("PBGWalls")
     if obj is not None:
-        context.scene.objects.unlink(obj)
+        #context.scene.objects.unlink(obj)
         bpy.data.objects.remove(obj)
     # end if
 
@@ -480,7 +480,7 @@ def gen_mesh_wall(context: bpy.types.Context, wall_loops: list, section_mesh: bp
 
     # link the created object to the scene
     obj = bpy.data.objects.new("PBGWalls", m)
-    context.scene.objects.link(obj)
+    context.scene.collection.objects.link(obj)
     return obj
 # end gen_mesh_walls
 
@@ -529,13 +529,13 @@ def gen_mesh_offset_wall(context: bpy.types.Context, footprint: list, params_gen
     # check if the object for walls already exists
     obj = bpy.data.objects.get("PBGOffset")
     if obj is not None:
-        context.scene.objects.unlink(obj)
+        #context.scene.objects.unlink(obj)
         bpy.data.objects.remove(obj)
     # end if
 
     # link the created object to the scene
     obj = bpy.data.objects.new("PBGOffset", m_extruded)
-    context.scene.objects.link(obj)
+    context.scene.collection.objects.link(obj)
     return obj
 # end gen_mesh_offset_wall
 
@@ -735,12 +735,12 @@ def gen_mesh_windows_above(context: bpy.types.Context, params_general: GenLayout
     bm.free()
     ob = bpy.data.objects.get("PBGWindowsAbove")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGWindowsAbove", m)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows_above
 
@@ -1008,12 +1008,12 @@ def gen_mesh_windows_under(context: bpy.types.Context, params_general: GenLayout
     windows_under_bmesh.free()
     ob = bpy.data.objects.get("PBGWindowsUnder")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGWindowsUnder", windows_under_mesh)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows_under
 
@@ -1061,12 +1061,12 @@ def gen_mesh_stairs(context: bpy.types.Context, params_general: GenLayout.Params
     bm.free()
     ob = bpy.data.objects.get("PBGStairs")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.collection.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGStairs", m)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_stairs
 
@@ -1153,12 +1153,12 @@ def gen_mesh_windows_around(context: bpy.types.Context, params_general: GenLayou
     bm.free()
     ob = bpy.data.objects.get("PBGWindowAround")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGWindowAround", m)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows_around
 
@@ -1272,12 +1272,12 @@ def gen_mesh_windows(context: bpy.types.Context, params_general: GenLayout.Param
         bm.free()
         ob = bpy.data.objects.get("BemppWindow")
         if ob is not None:
-            context.scene.objects.unlink(ob)
+            #context.scene.objects.unlink(ob)
             bpy.data.objects.remove(ob)
 
         # link the created object to the scene
         new_obj = bpy.data.objects.new("beppyWindow", m)
-        context.scene.objects.link(new_obj)
+        context.scene.collection.objects.link(new_obj)
         return new_obj
 
 
@@ -1366,12 +1366,12 @@ def gen_mesh_windows(context: bpy.types.Context, params_general: GenLayout.Param
     bm.free()
     ob = bpy.data.objects.get("PBGWindow")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGWindow", m)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows
 
@@ -1490,19 +1490,19 @@ def gen_mesh_roof(context: bpy.types.Context, params_general: GenLayout.ParamsGe
     bm_roof.free()
     ob = bpy.data.objects.get("PBGRoof")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGRoof", m_roof)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_roof
 
 
 def uv_unwrap(bm):
     uv_layer = bm.loops.layers.uv.verify()
-    bm.faces.layers.tex.verify()  # currently blender needs both layers.
+    #bm.faces.layers.tex.verify()  # currently blender needs both layers.
 
     # adjust UVs
     bm.verts.ensure_lookup_table()
@@ -1516,8 +1516,8 @@ def uv_unwrap(bm):
         mat_rot = mathutils.Matrix.Rotation(angle, 3, "Z")
         for loop in face.loops:
             loopuv = loop[uv_layer]
-            vert_proj = mat_proj * loop.vert.co
-            vert_uv_co = mat_rot * vert_proj
+            vert_proj = mat_proj @ loop.vert.co
+            vert_uv_co = mat_rot @ vert_proj
             uv = (vert_uv_co[1], vert_uv_co[2])
             loopuv.uv = uv
 
@@ -1552,12 +1552,12 @@ def gen_mesh_door_above(context: bpy.types.Context, params_general: GenLayout.Pa
     bm_wall_above.free()
     ob = bpy.data.objects.get("PGBDoorAbove")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PGBDoorAbove", m_door_above)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_door_above
 
@@ -1630,12 +1630,12 @@ def gen_mesh_door_around(context: bpy.types.Context, params_general: GenLayout.P
     bm.free()
     ob = bpy.data.objects.get("PBGDoorAround")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGDoorAround", m)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_door_around
 
@@ -1753,11 +1753,11 @@ def gen_mesh_door(context: bpy.types.Context, params_general: GenLayout.ParamsGe
     bm.free()
     ob = bpy.data.objects.get("PBGDoorComplete")
     if ob is not None:
-        context.scene.objects.unlink(ob)
+        #context.scene.objects.unlink(ob)
         bpy.data.objects.remove(ob)
 
     # link the created object to the scene
     new_obj = bpy.data.objects.new("PBGDoorComplete", m)
-    context.scene.objects.link(new_obj)
+    context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_door

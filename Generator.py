@@ -90,10 +90,11 @@ class Generator(bpy.types.Operator):
     bl_label = "Generate Building"
 
     def invoke(self, context, event):
-        group = bpy.data.groups.get("pbg_group")
+        #group = bpy.data.groups.get("pbg_group")
+        group = bpy.data.collections.get("pbg_group")
         if not group:
-            bpy.ops.group.create(name="pbg_group")
-            group = bpy.data.groups.get("pbg_group")
+            bpy.ops.collection.create(name="pbg_group")
+            group = bpy.data.collections.get("pbg_group")
         # delete all objects from group
         for obj in group.objects:
             bpy.data.objects.remove(obj)
@@ -143,7 +144,7 @@ class Generator(bpy.types.Operator):
                 separator_positions.append(((0, 0, params_general.floor_offset + wall_section_height +
                                             i*params_general.floor_height), 0))
             apply_positions(obj_separator, separator_positions, group)
-            obj_separator.hide = True
+            obj_separator.hide_set(True)
         # end if
         obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())
         group.objects.link(obj_wall)
@@ -155,44 +156,44 @@ class Generator(bpy.types.Operator):
         obj_window_under = GenMesh.gen_mesh_windows_under(context, params_general, params_windows_under, wall_section_mesh)
         group.objects.link(obj_window_under)
         apply_positions(obj_window_under, layout["window_positions"], group)
-        obj_window_under.hide = True
+        obj_window_under.hide_set(True)
 
         obj_window_above = GenMesh.gen_mesh_windows_above(context, params_general, params_windows_above, wall_section_mesh)
         group.objects.link(obj_window_above)
         apply_positions(obj_window_above, layout["window_positions"], group)
-        obj_window_above.hide = True
+        obj_window_above.hide_set(True)
 
         obj_window_around = GenMesh.gen_mesh_windows_around(context, params_general, params_windows)
         group.objects.link(obj_window_around)
         apply_positions(obj_window_around, layout["window_positions"], group)
-        obj_window_around.hide = True
+        obj_window_around.hide_set(True)
 
         obj_window = GenMesh.gen_mesh_windows(context, params_general, params_windows)
         group.objects.link(obj_window)
         apply_positions(obj_window, layout["window_positions"], group)
-        obj_window.hide = True
+        obj_window.hide_set(True)
 
         obj_door_above = GenMesh.gen_mesh_door_above(context, params_general, wall_section_mesh)
         group.objects.link(obj_door_above)
         apply_positions(obj_door_above, door_positions, group)
-        obj_door_above.hide = True
+        obj_door_above.hide_set(True)
 
         obj_door_around = GenMesh.gen_mesh_door_around(context, params_general, params_door)
         group.objects.link(obj_door_around)
         apply_positions(obj_door_around, door_positions, group)
-        obj_door_around.hide = True
+        obj_door_around.hide_set(True)
 
         obj_door = GenMesh.gen_mesh_door(context, params_general, params_door)
         group.objects.link(obj_door)
         apply_positions(obj_door, door_positions, group)
-        obj_door.hide = True
+        obj_door.hide_set(True)
 
         obj_pillar = None
         if params_general.generate_pillar == True:
             obj_pillar = GenMesh.gen_mesh_pillar(context, params_pillar, params_general, section_mesh.copy())
             group.objects.link(obj_pillar)
             apply_positions(obj_pillar, layout["pillar_positions"], group)
-            obj_pillar.hide = True
+            obj_pillar.hide_set(True)
         # end if
 
         obj_roof = GenMesh.gen_mesh_roof(context, params_general, footprint, params_footprint, params_roof)
@@ -261,7 +262,7 @@ def apply_positions(obj: bpy.types.Object, positions: list, group):
         # rotate it
         dup.rotation_euler.z = position[1]
         # link it to the scene
-        bpy.context.scene.objects.link(dup)
+        bpy.context.collection.objects.link(dup)
 # end apply_positions
 
 

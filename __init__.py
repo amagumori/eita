@@ -26,7 +26,7 @@ import importlib
 
 
 bl_info = {
-    "name": "Procedural building generator",
+    "name": "EITA",
     "description": "Proceduraly generate and edit buildings",
     "author": "Luka Šimić",
     "version": (0, 8, 0),
