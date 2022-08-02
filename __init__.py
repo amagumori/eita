@@ -19,8 +19,10 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import bpy
-from . import UI
-from . import Generator
+import importlib
+
+#from . import UI
+#from . import Generator
 
 
 bl_info = {
@@ -37,6 +39,15 @@ bl_info = {
     "category": "Add Mesh"
 }
 
+if "UI" in locals():
+    importlib.reload(UI)
+if "Generator" in locals():
+    importlib.reload(Generator)
+if "MyGenerator" in locals():
+    importlib.reload(MyGenerator)
+
+from . import UI
+from . import Generator
 
 def register():
     bpy.utils.register_class(UI.PBGPropertyGroup)
@@ -52,6 +63,9 @@ def register():
     bpy.utils.register_class(UI.PBGToolbarRoofPanel)
     bpy.utils.register_class(UI.PBGToolbarDoorPanel)
     bpy.utils.register_class(UI.PBGToolbarGeneratePanel)
+    ##
+    bpy.utils.register_class(UI.PBGToolbarMyGeneratePanel)
+    bpy.utils.register_class(Generator.MyGenerator)
     bpy.utils.register_class(Generator.Generator)
 
 
@@ -69,4 +83,8 @@ def unregister():
     bpy.utils.unregister_class(UI.PBGToolbarRoofPanel)
     bpy.utils.unregister_class(UI.PBGToolbarDoorPanel)
     bpy.utils.unregister_class(UI.PBGToolbarGeneratePanel)
+    ##
+    bpy.utils.unregister_class(UI.PBGToolbarMyGeneratePanel)
+    bpy.utils.unregister_class(Generator.MyGenerator)
+    ##
     bpy.utils.unregister_class(Generator.Generator)
