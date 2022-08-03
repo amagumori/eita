@@ -52,6 +52,11 @@ from . import Generator
 def register():
     bpy.utils.register_class(UI.PBGPropertyGroup)
     bpy.types.Scene.PBGPropertyGroup = bpy.props.PointerProperty(type=UI.PBGPropertyGroup)
+    #
+
+    bpy.utils.register_class(UI.WindowCageDebugPanel)
+
+    #
     bpy.utils.register_class(UI.PBGToolbarGeneralPanel)
     bpy.utils.register_class(UI.PBGToolbarLayoutPanel)
     bpy.utils.register_class(UI.PBGToolbarPillarPanel)
@@ -72,6 +77,9 @@ def register():
 def unregister():
     del bpy.types.Scene.PBGPropertyGroup
     bpy.utils.unregister_class(UI.PBGPropertyGroup)
+    #
+    bpy.utils.unregister_class(UI.WindowCageDebugPanel)
+
     bpy.utils.unregister_class(UI.PBGToolbarGeneralPanel)
     bpy.utils.unregister_class(UI.PBGToolbarLayoutPanel)
     bpy.utils.unregister_class(UI.PBGToolbarPillarPanel)

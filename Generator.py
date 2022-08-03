@@ -24,6 +24,7 @@ import math
 import bpy
 from . import GenLayout
 from . import GenMesh
+from . import NewMesh
 from . import GenUtils
 import time
 import os
@@ -34,10 +35,10 @@ class MyGenerator(bpy.types.Operator):
     bl_label = "pepe popo"
 
     def invoke(self, context, event):
-        group = bpy.data.groups.get("pbg_group")
+        group = bpy.data.collections.get("pbg_group")
         if not group:
-            bpy.ops.group.create(name="pbg_group")
-            group = bpy.data.groups.get("pbg_group")
+            bpy.ops.collection.create(name="pbg_group")
+            group = bpy.data.collections.get("pbg_group")
         # delete all objects from group
         for obj in group.objects:
             bpy.data.objects.remove(obj)
@@ -47,6 +48,7 @@ class MyGenerator(bpy.types.Operator):
         params_section = GenUtils.ParamsSectionFactory.beppy()
         print(params_section)
         params_windows = GenMesh.ParamsWindows.from_ui()
+        params_cage = NewMesh.ParamsWindowCage.from_ui()
 
         sequence = GenUtils.gen_simple_section_list(params_windows.section_width, params_windows.section_height)
         m_section = GenUtils.gen_section_mesh(sequence, params_windows.frame_width,
@@ -64,17 +66,21 @@ class MyGenerator(bpy.types.Operator):
 
         #my_window = GenMesh.gen_mesh_windows(context, params_general, params_windows)
         #group.objects.link(m_section)
-        m = bpy.data.meshes.new("PBGWindow")
-        bm_section.to_mesh(m)
-        bm_section.free()
-        ob = bpy.data.objects.get("PBGWindow")
+        my_bar = NewMesh.gen_mesh_window_cage(context, params_cage, params_general)
+
+        '''
+        m = bpy.data.meshes.new("WindowCageBar")
+        my_bar.to_mesh(m)
+        my_bar.free()
+        ob = bpy.data.objects.get("WindowCageBar")
         if ob is not None:
-            context.scene.objects.unlink(ob)
+            #context.scene.objects.unlink(ob)
             bpy.data.objects.remove(ob)
 
         # link the created object to the scene
-        new_obj = bpy.data.objects.new("PBGWindow", m)
-        context.scene.objects.link(new_obj)
+        new_obj = bpy.data.objects.new("WindowCageBar", m)
+        context.scene.collection.objects.link(new_obj)
+        '''
 
         #group.objects.link(my_window)
         origin = (0,0,0)

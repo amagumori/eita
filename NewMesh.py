@@ -8,6 +8,7 @@ from . import GenLayout
 
 class ParamsWindowCage:
     def __init__(self,
+                 cage_type: str,
                  width: float,
                  height: float,
                  spacing_x: float,      # use these to generate rows / cols
@@ -16,8 +17,7 @@ class ParamsWindowCage:
                  bar_thickness: float,  # bar dia / width
                  bar_profile: str,      # square / round bar
                  row_type: str,         # evenly spaced or ratio rows..placeholder
-                 row_ratio: float,      # ''
-                 cage_type:  str):       # diagonal / horizontal bars
+                 row_ratio: float ):
 
         self.type = cage_type
         self.width = width
@@ -44,7 +44,6 @@ class ParamsWindowCage:
                 properties.window_cage_depth,
                 properties.window_cage_bar_thickness,
                 properties.window_cage_bar_profile,
-                properties.window_cage_type,
                 properties.window_cage_row_type,
                 properties.window_cage_row_ratio
         )
@@ -60,8 +59,44 @@ def gen_mesh_window_cage( context: bpy.types.Context,
 
     bm = bmesh.new()
 
-    bar_spacing_x = window_cage_width / window_cage_spacing_x
-    bar_spacing_y = window_cage_height / window_cage_spacing_y
+    bar_section_list = GenUtils.gen_simple_section_list(params_cage.bar_thickness, params_cage.bar_thickness )
+    bar_section_mesh = GenUtils.gen_section_mesh(bar_section_list, params_cage.bar_thickness, params_cage.bar_thickness)
+
+    bar_spacing_x = params_cage.width / params_cage.spacing_x 
+    bar_spacing_y = params_cage.height / params_cage.spacing_y
+
+    vertical = list()
+    horiz = list()
+
+    test = list()
+    test.append( (0.0, 0.0, 0.0 ) ) 
+    test.append( (params_cage.height, 0.0, 0.0 ) )
+   
+    layout = list()
+
+    layout.append((-0.5 * params_cage.window_cage_depth, params_cage.window_cage_height, 0.0))
+    layout.append((-0.5 * params_cage.window_cage_depth, 0.0, 0.0))
+    layout.append((0.5 * params_windows.window_cage_depth, -params_windows.window_cage_height, 0.0))
+    layout.append((0.5 * params_windows.window_cage_depth, -params_windows.window_cage_height, 0.0))
+
+    #XZ - width height
+    #Y -  depth
+
+    vertical.append( (0.0,0.0,0.0) )
+    vertical.append( (0.0, params_cage.depth, 0.0 ) )
+    vertical.append( (0.0, params_cage.depth, params_cage.height ) )
+    vertical.append( (0.0, 0.0, params_cage.height ) ) 
+
+    m = Utils.extrude_along_edges(bar_section_mesh, layout, False)
+    bm.from_mesh(m)
+
+    m = bpy.data.meshes.new("windowCageBar")
+    bm.to_mesh(m)
+    bm.free()
+
+    new_obj = bpy.data.objects.new("windowCageBar", m)
+    context.scene.collection.objects.link(new_obj)
+    return new_obj
 
 
 class ParamsAwning:

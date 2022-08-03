@@ -474,8 +474,94 @@ class PBGPropertyGroup(PropertyGroup):
         name="Door block width",
         default=0.05
     )
+    
+    # window cage shit
+
+    window_cage_types = [
+        ("BOX", "BOX", "", 0)
+        # etc.
+    ]
+
+    window_cage_type : EnumProperty(
+        items=window_cage_types,
+        default="BOX"
+    )
+    
+    window_cage_width : FloatProperty(
+            name="window cage width",
+            default=0.3
+    )
+    
+    window_cage_height : FloatProperty(
+            name="window cage height",
+            default=0.3
+    )
+    window_cage_spacing_x : FloatProperty(
+            name="window cage spacing X",
+            default=0.01
+    )
+    window_cage_spacing_y : FloatProperty(
+            name="window cage spacing Y",
+            default=0.01
+    )
+    window_cage_depth : FloatProperty(
+            name="window cage depth / how much it sticks out lol",
+            default=0.8
+    )
+    window_cage_bar_thickness : FloatProperty(
+            name="window cage bar thickness",
+            default=0.3
+    )
+    # this is not a float this is enum square round etc
+    window_cage_bar_profile : FloatProperty(
+            name="window cage bar profile",
+            default=0.3
+    )
+    # another enum..ugh
+    window_cage_row_type : FloatProperty(
+            name="window cage row type",
+            default=0.3
+    )
+
+    window_cage_row_ratio : FloatProperty(
+            name="window cage row ratio",
+            default=0.3
+    )
+
+
 
 # end PBGPropertyGroup
+
+class WindowCageDebugPanel(Panel):
+    # TODO: docstring
+    bl_label = "window cage - debug"
+    bl_category = ""
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_context = "objectmode"
+
+    def draw(self, context):
+        layout = self.layout
+        properties = context.scene.PBGPropertyGroup
+
+        col = layout.column(align=True)
+        col.label(text="Overall Window Cage Dimensions")
+        col.prop(properties, "window_cage_type")
+        col.prop(properties, "window_cage_width")
+        col.prop(properties, "window_cage_height")
+        
+        col.label(text="Window cage details")
+        col.prop(properties, "window_cage_spacing_x")
+        col.prop(properties, "window_cage_spacing_y")
+        col.prop(properties, "window_cage_depth")
+        col.prop(properties, "window_cage_bar_thickness")
+        col.prop(properties, "window_cage_bar_profile")
+        col.prop(properties, "window_cage_row_type")
+        col.prop(properties, "window_cage_row_ratio")
+        
+    # end draw
+# end PBGToolbarPanel
+
 
 
 class PBGToolbarGeneralPanel(Panel):
