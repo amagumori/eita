@@ -195,6 +195,85 @@ class ParamsSectionFactory:
 # GenerateSectionParamsFactory
 
 
+#def gen_corrugated_section_list( size_flat: float, size_circle: float ):
+
+def gen_awning_section_list( total_width, flat_width, circle_width, circle_height ) -> list:
+
+    sequence = list()
+    width = 0
+    while width < total_width:
+        element = SectionElement("straight", flat_width, 0 )
+        sequence.append(element)
+        element = SectionElement("circle", circle_width, circle_height)
+        sequence.append(element)
+        width += flat_width
+        width += circle_width
+      
+    return sequence
+
+
+def gen_plane_profile(sequence: list, width: float ) -> bpy.types.Mesh:
+    """
+    NEW - eita
+    Generates a profile to be extruded (corrugated roof, etc.)
+    takes sectionElements, which will be extended to include triangle, "chamfered triangle" etc.
+
+    except in this, we append sections end-to-end in Y.
+    """
+
+    verts = list()
+    verts.append( [0, 0, 0] )
+
+    for element in sequence:
+        # just adds another vert <width> away on Y
+        if element.element_type == "straight":
+            #verts.append( [0, verts[-1][1]+element.width, verts[-1][2] ] )
+            if verts[-1]:
+                verts.append( verts[-1] )
+            verts.append( [0, verts[-1][1]+element.width, 0 ] )
+        if element.element_type == "circle":
+            #verts.append( verts[-1] )
+            i=1
+            angle_step = -(math.pi)/Constants.PROFILE_CIRCLE_PRECISION
+            angle = math.pi
+            center_y = verts[-1][1] + element.width
+            center_z = verts[-1][2] + element.height
+            while i <= Constants.PROFILE_CIRCLE_PRECISION+1:
+                #verts.append( [0, center_y + element.width * math.cos(angle), 0 ] )
+                verts.append( [0, center_y + element.width * math.cos(angle), center_z * math.sin(angle) ] )
+                i += 1
+                angle += angle_step
+            #end while
+        #end if
+    #end for (i'm just doing this because the original author did too.  ???)
+   
+    # assuming that the final vert is at height (Z) 0
+    verts.append( [0, verts[-1][1], 0 ] )
+
+    edges = list()
+    i = 0 
+    while i < len(verts) - 1:
+        edges.append( [i, i+1] ),
+        i += 1
+    #end while
+
+    m = bpy.data.meshes.new(name="HorizontalSection")
+    m.from_pydata(verts, edges, [])
+    m.update()
+    bm = bmesh.new()
+    bm.from_mesh(m)
+
+    mat_loc = mathutils.Matrix.Translation( (0,0,0) )
+    # only scaling on width (Y) for now 
+    bmesh.ops.scale( bm, vec=(1.0, width, 1.0 ), space=mat_loc, verts=bm.verts)
+    bm.to_mesh(m)
+    bm.free()
+
+    return m
+
+#end gen_plane_profile 
+
+
 def gen_section_mesh(sequence: list, height: float, width: float) -> bpy.types.Mesh:
     """
     Generates a mesh from the given list of sectionElements.

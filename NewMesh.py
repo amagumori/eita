@@ -74,10 +74,17 @@ def gen_mesh_window_cage( context: bpy.types.Context,
    
     layout = list()
 
-    layout.append((-0.5 * params_cage.window_cage_depth, params_cage.window_cage_height, 0.0))
-    layout.append((-0.5 * params_cage.window_cage_depth, 0.0, 0.0))
-    layout.append((0.5 * params_windows.window_cage_depth, -params_windows.window_cage_height, 0.0))
-    layout.append((0.5 * params_windows.window_cage_depth, -params_windows.window_cage_height, 0.0))
+    '''
+    layout.append((-0.5 * params_cage.depth, params_cage.height, 0.0))
+    layout.append((-0.5 * params_cage.depth, 0.0, 0.0))
+    layout.append((0.5 * params_cage.depth, -params_cage.height, 0.0))
+    layout.append((0.5 * params_cage.depth, -params_cage.height, 0.0))
+    '''
+
+    layout.append((-0.5 * params_general.window_width, -params_cage.depth, 0.0))
+    layout.append((-0.5 * params_general.window_width, params_cage.depth, 0.0))
+    layout.append((0.5 * params_general.window_width, params_cage.depth, 0.0))
+    layout.append((0.5 * params_general.window_width, -params_cage.depth, 0.0))
 
     #XZ - width height
     #Y -  depth

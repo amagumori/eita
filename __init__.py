@@ -45,6 +45,14 @@ if "Generator" in locals():
     importlib.reload(Generator)
 if "MyGenerator" in locals():
     importlib.reload(MyGenerator)
+if "GenMesh" in locals():
+    importlib.reload(GenMesh)
+if "NewMesh" in locals():
+    importlib.reload(NewMesh)
+if "GenUtils" in locals():
+    importlib.reload(GenUtils)
+if "Constants" in locals():
+    importlib.reload(Constants)
 
 from . import UI
 from . import Generator

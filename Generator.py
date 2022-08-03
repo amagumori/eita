@@ -68,6 +68,20 @@ class MyGenerator(bpy.types.Operator):
         #group.objects.link(m_section)
         my_bar = NewMesh.gen_mesh_window_cage(context, params_cage, params_general)
 
+        # just using these window params as arbitrary values.
+        awning_profile_list = GenUtils.gen_awning_section_list(25, 3, 1, 0.03)
+        awning_profile = GenUtils.gen_plane_profile( awning_profile_list, params_windows.frame_width )
+
+        awning_section = bmesh.new()
+        awning_section.from_mesh(awning_profile)
+
+        m = bpy.data.meshes.new("test")
+        awning_section.to_mesh(m)
+        awning_section.free()
+
+        test_obj = bpy.data.objects.new( "test", m )
+        context.scene.collection.objects.link(test_obj)     
+    
         '''
         m = bpy.data.meshes.new("WindowCageBar")
         my_bar.to_mesh(m)
