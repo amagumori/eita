@@ -81,21 +81,62 @@ def gen_mesh_window_cage( context: bpy.types.Context,
     layout.append((0.5 * params_cage.depth, -params_cage.height, 0.0))
     '''
 
-    layout.append((-0.5 * params_general.window_width, -params_cage.depth, 0.0))
-    layout.append((-0.5 * params_general.window_width, params_cage.depth, 0.0))
-    layout.append((0.5 * params_general.window_width, params_cage.depth, 0.0))
-    layout.append((0.5 * params_general.window_width, -params_cage.depth, 0.0))
+    layout.append((-0.5 * params_cage.height, -params_cage.depth, 0.0))
+    layout.append((-0.5 * params_cage.height, params_cage.depth, 0.0))
+    layout.append((0.5 * params_cage.height, params_cage.depth, 0.0))
+    layout.append((0.5 * params_cage.height, -params_cage.depth, 0.0))
 
     #XZ - width height
     #Y -  depth
-
+    
+    '''
     vertical.append( (0.0,0.0,0.0) )
     vertical.append( (0.0, params_cage.depth, 0.0 ) )
     vertical.append( (0.0, params_cage.depth, params_cage.height ) )
     vertical.append( (0.0, 0.0, params_cage.height ) ) 
+    '''
+
+    vertical.append( (0.0, 0.0, params_cage.height ) ) 
+    vertical.append( (0.0, params_cage.depth, params_cage.height ) )
+    vertical.append( (0.0, params_cage.depth, 0.0 ) )
 
     m = Utils.extrude_along_edges(bar_section_mesh, layout, False)
     bm.from_mesh(m)
+    geo = bm.verts[:] + bm.edges[:] + bm.faces[:]
+    mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+    steps = int( params_cage.width // params_cage.spacing_x )
+    bmesh.ops.spin(
+            bm,
+            geom=geo,
+            cent=(0.0,0.0,0.0),
+            axis=(0.0,0.0,0.0),
+            dvec=(0.0,0.0,params_cage.spacing_x),
+            angle=0.0,
+            space=mat_loc,
+            steps=steps,
+            use_merge=False,
+            use_normal_flip=False,
+            use_duplicate=True)
+
+
+    '''
+    i=0
+    while i < params_cage.width:
+        print('i: ', i)
+        print('spacing x by i', params_cage.spacing_x*i )
+        trans = mathutils.Matrix.Translation((0.0, 0.0, params_cage.spacing_x * i ) )
+
+        geom_to_duplicate = bm.verts[:] + bm.edges[:] + bm.faces[:]
+        #ret_dup = bmesh.ops.duplicate(bm, geom=geom_to_duplicate)
+
+        bpy.ops.mesh.duplicate_move(geom_to_duplicate, (0.0,0.0,params_cage.spacing_x*i))
+
+        #verts_to_transform = [ele for ele in ret_dup["geom"] if isinstance(ele, bmesh.types.BMVert)]
+        #mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+        #bmesh.ops.translate(bm, vec=(0.0, 0.0, params_cage.spacing_x * i ), verts=verts_to_transform, space=mat_loc)
+
+        i += params_cage.spacing_x
+    '''
 
     m = bpy.data.meshes.new("windowCageBar")
     bm.to_mesh(m)
