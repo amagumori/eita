@@ -11,8 +11,8 @@ class ParamsWindowCage:
                  cage_type: str,
                  width: float,
                  height: float,
-                 spacing_x: float,      # use these to generate rows / cols
-                 spacing_y: float,
+                 spacing_vertical: float,      # spacing of vertical bars
+                 spacing_horizontal: float,    # spacing OF horizontal bars
                  depth:  float,      # how far it comes out from window, better term?
                  bar_thickness: float,  # bar dia / width
                  bar_profile: str,      # square / round bar
@@ -22,8 +22,8 @@ class ParamsWindowCage:
         self.type = cage_type
         self.width = width
         self.height = height
-        self.spacing_x = spacing_x
-        self.spacing_y = spacing_y
+        self.spacing_horizontal = spacing_horizontal
+        self.spacing_vertical = spacing_vertical
         self.depth = depth
         self.bar_thickness = bar_thickness
         self.bar_profile = bar_profile
@@ -39,8 +39,8 @@ class ParamsWindowCage:
                 properties.window_cage_type,
                 properties.window_cage_width,
                 properties.window_cage_height,
-                properties.window_cage_spacing_x,
-                properties.window_cage_spacing_y,
+                properties.window_cage_spacing_vert,
+                properties.window_cage_spacing_horiz,
                 properties.window_cage_depth,
                 properties.window_cage_bar_thickness,
                 properties.window_cage_bar_profile,
@@ -62,49 +62,33 @@ def gen_mesh_window_cage( context: bpy.types.Context,
     bar_section_list = GenUtils.gen_simple_section_list(params_cage.bar_thickness, params_cage.bar_thickness )
     bar_section_mesh = GenUtils.gen_section_mesh(bar_section_list, params_cage.bar_thickness, params_cage.bar_thickness)
 
-    bar_spacing_x = params_cage.width / params_cage.spacing_x 
-    bar_spacing_y = params_cage.height / params_cage.spacing_y
-
-    vertical = list()
-    horiz = list()
-
-    test = list()
-    test.append( (0.0, 0.0, 0.0 ) ) 
-    test.append( (params_cage.height, 0.0, 0.0 ) )
-   
     layout_vertical  = list()
 
-    '''
-    layout.append((-0.5 * params_cage.depth, params_cage.height, 0.0))
-    layout.append((-0.5 * params_cage.depth, 0.0, 0.0))
-    layout.append((0.5 * params_cage.depth, -params_cage.height, 0.0))
-    layout.append((0.5 * params_cage.depth, -params_cage.height, 0.0))
-    '''
-
-    layout_vertical.append((-0.5 * params_cage.height, -params_cage.depth, 0.0))
-    layout_vertical.append((-0.5 * params_cage.height, params_cage.depth, 0.0))
-    layout_vertical.append((0.5 * params_cage.height, params_cage.depth, 0.0))
-    layout_vertical.append((0.5 * params_cage.height, -params_cage.depth, 0.0))
+    layout_vertical.append((-0.5 * params_cage.width, -params_cage.depth, 0.0))
+    layout_vertical.append((-0.5 * params_cage.width, params_cage.depth, 0.0))
+    layout_vertical.append((0.5 * params_cage.width, params_cage.depth, 0.0))
+    layout_vertical.append((0.5 * params_cage.width, -params_cage.depth, 0.0))
 
     layout_horizontal = list()
-    
-    layout_horizontal.append((0.0, -params_cage.depth, -0.5*params_cage.width))
-    layout_horizontal.append((0.0, params_cage.depth, -0.5*params_cage.width))
-    layout_horizontal.append((0.0, params_cage.depth, 0.5*params_cage.width))
-    layout_horizontal.append((0.0, -params_cage.depth, 0.5*params_cage.width))
 
+    
+    layout_horizontal.append((-0.5 * params_cage.height, -params_cage.depth, 0.0))
+    layout_horizontal.append((-0.5 * params_cage.height, params_cage.depth, 0.0))
+    layout_horizontal.append((0.5 * params_cage.height, params_cage.depth, 0.0))
+    layout_horizontal.append((0.5 * params_cage.height, -params_cage.depth, 0.0))
+   
     m = Utils.extrude_along_edges(bar_section_mesh, layout_vertical, False)
 
     bm.from_mesh(m)
     geo = bm.verts[:] + bm.edges[:] + bm.faces[:]
     mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
-    steps = int( params_cage.width // params_cage.spacing_x )
+    steps = int( params_cage.height // params_cage.spacing_vertical )
     bmesh.ops.spin(
             bm,
             geom=geo,
             cent=(0.0,0.0,0.0),
             axis=(0.0,0.0,0.0),
-            dvec=(0.0,0.0,params_cage.spacing_x),
+            dvec=(0.0,0.0,params_cage.spacing_vertical),
             angle=0.0,
             space=mat_loc,
             steps=steps,
@@ -112,19 +96,33 @@ def gen_mesh_window_cage( context: bpy.types.Context,
             use_normal_flip=False,
             use_duplicate=True)
 
+    another_sec =  GenUtils.gen_section_mesh(bar_section_list, params_cage.bar_thickness, params_cage.bar_thickness)
+    mesh = Utils.extrude_along_edges(another_sec, layout_horizontal, False)
+
+    bmosh = bmesh.new()
+
+    bmosh.from_mesh(mesh)
+
+    vts = bmosh.verts[:]
+    rot_mat = mathutils.Matrix.Rotation( math.radians( 90 ), 4, 'Y')
+    bmesh.ops.rotate(bmosh,
+            cent=(0.0,0.0,0.0),
+            matrix=rot_mat,
+            verts=vts,
+            space=mat_loc,
+            use_shapekey=False)
     
-    m = Utils.extrude_along_edges(bar_section_mesh, layout_horizontal, False)
 
-    bm.from_mesh(m)
-    geo = bm.verts[:] + bm.edges[:] + bm.faces[:]
+    geo = bmosh.verts[:] + bmosh.edges[:] + bmosh.faces[:]
     mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
-    steps = int( params_cage.height // params_cage.spacing_y )
+    steps = int( params_cage.width // params_cage.spacing_horizontal )
+    
     bmesh.ops.spin(
-            bm,
+            bmosh,
             geom=geo,
             cent=(0.0,0.0,0.0),
             axis=(0.0,0.0,0.0),
-            dvec=(params_cage.spacing_y, 0.0, 0.0 ),
+            dvec=(params_cage.spacing_horizontal, 0.0, 0.0 ),
             angle=0.0,
             space=mat_loc,
             steps=steps,
@@ -132,6 +130,18 @@ def gen_mesh_window_cage( context: bpy.types.Context,
             use_normal_flip=False,
             use_duplicate=True)
 
+    vts = bmosh.verts[:]
+    bmesh.ops.translate( bmosh,
+            vec=( -0.5*params_cage.width, 0.0, 0.5*params_cage.height),
+            space=mat_loc,
+            verts=vts,
+            use_shapekey=False)
+   
+    mtwo = bpy.data.meshes.new("windowCageBarVertical")
+    bmosh.to_mesh(mtwo)
+    bmosh.free()
+    new_obj_two = bpy.data.objects.new("windowCageBarVertical", mtwo)
+    context.scene.collection.objects.link(new_obj_two)
     
 
     m = bpy.data.meshes.new("windowCageBar")

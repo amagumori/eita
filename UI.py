@@ -496,12 +496,12 @@ class PBGPropertyGroup(PropertyGroup):
             name="window cage height",
             default=0.3
     )
-    window_cage_spacing_x : FloatProperty(
-            name="window cage spacing X",
-            default=0.01
+    window_cage_spacing_horiz : FloatProperty(
+            name="spacing of horizontal cage bars",
+            default=0.02
     )
-    window_cage_spacing_y : FloatProperty(
-            name="window cage spacing Y",
+    window_cage_spacing_vert : FloatProperty(
+            name="spacing of vertical cage bars",
             default=0.01
     )
     window_cage_depth : FloatProperty(
@@ -551,8 +551,8 @@ class WindowCageDebugPanel(Panel):
         col.prop(properties, "window_cage_height")
         
         col.label(text="Window cage details")
-        col.prop(properties, "window_cage_spacing_x")
-        col.prop(properties, "window_cage_spacing_y")
+        col.prop(properties, "window_cage_spacing_horiz")
+        col.prop(properties, "window_cage_spacing_vert")
         col.prop(properties, "window_cage_depth")
         col.prop(properties, "window_cage_bar_thickness")
         col.prop(properties, "window_cage_bar_profile")
