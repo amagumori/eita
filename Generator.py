@@ -25,6 +25,7 @@ import bpy
 from . import GenLayout
 from . import GenMesh
 from . import NewMesh
+from . import Utils
 from . import GenUtils
 import time
 import os
@@ -102,6 +103,41 @@ class MyGenerator(bpy.types.Operator):
         return {"FINISHED"}
     # end invoke
 # end MyGenerator
+
+class FootprintTest(bpy.types.Operator):
+    bl_idname = "pbg.test_footprint"
+    bl_label = "Test Building Footprint"
+
+    def invoke(self, context, event):
+
+        group = bpy.data.collections.get("pbg_group")
+        if not group:
+            bpy.ops.collection.create(name="pbg_group")
+            group = bpy.data.collections.get("pbg_group")
+        # delete all objects from group
+        for obj in group.objects:
+            bpy.data.objects.remove(obj)
+
+        params_general = GenLayout.ParamsGeneral.from_ui()
+        params_footprint = GenLayout.ParamsFootprint.from_ui()
+        params_walls = GenMesh.ParamsWalls.from_ui()
+        
+        if params_general.generate_separator == True:
+            wall_section_height = params_general.floor_height - params_general.separator_height
+        else:
+            wall_section_height = params_general.floor_height
+
+        footprint = GenLayout.gen_footprint(params_footprint)
+
+        door_position = ((0.0, 0.5*params_footprint.building_depth+params_footprint.building_wedge_depth, params_general.floor_offset), 0)
+        layout = GenLayout.gen_layout(params_general, footprint, door_position)
+        wall_section_mesh = GenUtils.gen_wall_section_mesh(params_walls.type, wall_section_height, params_walls.section_size, params_walls.mortar_size, params_walls.row_count)
+        obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())
+        group.objects.link(obj_wall)
+
+
+        return {"FINISHED"}
+
 
 class Generator(bpy.types.Operator):
     # TODO: docstring

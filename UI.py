@@ -855,8 +855,8 @@ class PBGToolbarGeneratePanel(Panel):
     # end draw
 # end PBGGeneratePanel
 
-class PBGToolbarMyGeneratePanel(Panel):
-    bl_label="peepee poopoo"
+class PBGToolbarTestFootprint(Panel):
+    bl_label="test footprint"
     bl_category=""
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
@@ -866,5 +866,6 @@ class PBGToolbarMyGeneratePanel(Panel):
         layout = self.layout
         row = layout.row(align=True)
         row.operator("pbg.my_generate_building", text="Bruh")
+        row.operator("pbg.test_footprint", text="Test Footprint.")
     # end draw
 # end PBGMyGeneratePanel

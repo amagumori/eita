@@ -47,6 +47,8 @@ if "MyGenerator" in locals():
     importlib.reload(MyGenerator)
 if "GenMesh" in locals():
     importlib.reload(GenMesh)
+if "GenLayout" in locals():
+    importlib.reload(GenLayout)
 if "NewMesh" in locals():
     importlib.reload(NewMesh)
 if "GenUtils" in locals():
@@ -62,7 +64,9 @@ def register():
     bpy.types.Scene.PBGPropertyGroup = bpy.props.PointerProperty(type=UI.PBGPropertyGroup)
     #
 
+    bpy.utils.register_class(Generator.FootprintTest)
     bpy.utils.register_class(UI.WindowCageDebugPanel)
+    bpy.utils.register_class(UI.PBGToolbarTestFootprint)
 
     #
     bpy.utils.register_class(UI.PBGToolbarGeneralPanel)
@@ -77,7 +81,6 @@ def register():
     bpy.utils.register_class(UI.PBGToolbarDoorPanel)
     bpy.utils.register_class(UI.PBGToolbarGeneratePanel)
     ##
-    bpy.utils.register_class(UI.PBGToolbarMyGeneratePanel)
     bpy.utils.register_class(Generator.MyGenerator)
     bpy.utils.register_class(Generator.Generator)
 
@@ -87,6 +90,8 @@ def unregister():
     bpy.utils.unregister_class(UI.PBGPropertyGroup)
     #
     bpy.utils.unregister_class(UI.WindowCageDebugPanel)
+    bpy.utils.unregister_class(Generator.FootprintTest)
+
 
     bpy.utils.unregister_class(UI.PBGToolbarGeneralPanel)
     bpy.utils.unregister_class(UI.PBGToolbarLayoutPanel)
@@ -100,7 +105,7 @@ def unregister():
     bpy.utils.unregister_class(UI.PBGToolbarDoorPanel)
     bpy.utils.unregister_class(UI.PBGToolbarGeneratePanel)
     ##
-    bpy.utils.unregister_class(UI.PBGToolbarMyGeneratePanel)
+    bpy.utils.unregister_class(UI.PBGToolbarTestFootprint)
     bpy.utils.unregister_class(Generator.MyGenerator)
     ##
     bpy.utils.unregister_class(Generator.Generator)

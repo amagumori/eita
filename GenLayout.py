@@ -103,6 +103,11 @@ def gen_footprint(params_footprint: ParamsFootprint) -> list:
     Returns:
         list(tuple(x,y,z)) - a list containing ordered verts, which define the building footprint.
     """
+
+    ''' if 
+    "full-floor non-wrap balconies" then we export lists for each side of the building's flat part"
+    '''
+
     layout = list()
     # bottom left corner
     if params_footprint.building_chamfer > 0:
