@@ -200,3 +200,80 @@ class ParamsAwning:
 # end ParamsWindowCage
 
 
+def gen_balcony_section () -> bpy.types.Mesh:
+    """
+    Generates a mesh from the given list of sectionElements.
+
+    Args:
+         sequence (list of SectionElement): a list of SectionElements, to be used for generating the mesh. Likely the
+             result of calling the generate_section function.
+         height (float): height of the section
+         width (float): width of the section
+
+    Returns, bpy.types.Mesh:
+        A mesh following the sequence, in Y-Z plane, starting in (0,0,0), with width and height of 1 blender unit.
+    """
+
+    width = 2 
+    height = 2 
+
+    thickness = 0.2
+    balcony_depth = 1
+    chamfer = 0.05
+    balcony_height = 0.5
+
+
+    verts = list()
+    verts.append([0, 0, 0])
+
+    verts.append([0, balcony_depth, 0])
+    verts.append([0, balcony_depth, balcony_height - (0.5*chamfer) ])
+    verts.append([0, balcony_depth - (0.5*chamfer), balcony_height ])
+    verts.append([0, verts[-1][1] - thickness, balcony_height ])
+    verts.append([0, verts[-1][1], thickness ]) #bottom inner vert 
+    verts.append([0, 0, thickness ])
+
+
+    edges = list()
+    i = 0
+    while i < len(verts)-1:
+        edges.append([i, i+1]),
+        i += 1
+    # end while
+
+    m = bpy.data.meshes.new(name="TestBalcony")
+    m.from_pydata(verts, edges, [])
+    m.update()
+    bm = bmesh.new()
+    bm.from_mesh(m)
+
+    # scale the mesh so it has the desired width and height.
+    mat_loc = mathutils.Matrix.Translation((0, 0, 0))
+    bmesh.ops.scale(bm, vec=(1.0, width, height), space=mat_loc, verts=bm.verts)
+
+    bm.to_mesh(m)
+    bm.free()
+    return m
+# end generate_section_mesh
+
+def gen_balcony(context: bpy.types.Context, footprint: list,
+                             section_mesh: bpy.types.Mesh) -> bpy.types.Object:
+    """
+        Creates the floor separator object
+        floor separator will be placed at the origin (0, 0, 0)
+    Args:
+        context: bpy.types.Context
+        footprint: list(tuple(x,y,z)) - building footprint
+        section_mesh: cross section/side profile of the separator
+    Returns:
+        bpy.types.Object - single separator object placed at origin
+    """
+
+    # extrude the section along the footprint to create the separator
+    m = Utils.extrude_along_edges(section_mesh, footprint, True)
+
+    # create a new object, link it to the scene and return it
+    obj = bpy.data.objects.new("beppBalcony", m)
+    context.collection.objects.link(obj)
+    return obj
+# end gen_mesh_floor_separator

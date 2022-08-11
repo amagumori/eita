@@ -132,9 +132,13 @@ class FootprintTest(bpy.types.Operator):
         door_position = ((0.0, 0.5*params_footprint.building_depth+params_footprint.building_wedge_depth, params_general.floor_offset), 0)
         layout = GenLayout.gen_layout(params_general, footprint, door_position)
         wall_section_mesh = GenUtils.gen_wall_section_mesh(params_walls.type, wall_section_height, params_walls.section_size, params_walls.mortar_size, params_walls.row_count)
+        
         obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())
         group.objects.link(obj_wall)
 
+        balcony_section = NewMesh.gen_balcony_section()
+        balcony = NewMesh.gen_balcony( context, footprint, balcony_section )
+        group.objects.link(balcony)
 
         return {"FINISHED"}
 
@@ -195,11 +199,19 @@ class Generator(bpy.types.Operator):
         if params_general.generate_separator == True:
             obj_separator = GenMesh.gen_mesh_floor_separator(context, footprint, section_mesh.copy())
             group.objects.link(obj_separator)
+
+            ## NEW!!
+            balcony_section = NewMesh.gen_balcony_section()
+            balcony = NewMesh.gen_balcony(context, footprint, balcony_section)
+            group.objects.link(balcony)
+
             separator_positions = list()
             for i in range(0, params_general.floor_count+1):
                 separator_positions.append(((0, 0, params_general.floor_offset + wall_section_height +
                                             i*params_general.floor_height), 0))
             apply_positions(obj_separator, separator_positions, group)
+            ##
+            apply_positions(balcony, separator_positions, group)
             obj_separator.hide_set(True)
         # end if
         obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())
