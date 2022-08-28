@@ -323,13 +323,15 @@ def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayo
         first_vert = list()
 
         first_vert = ((
-            0.5 * params.window_width,
             0.0,
+            0.5 * params.window_width,
+            #0.0,
             0.0 ))
         second_vert = list()
         second_vert = ((
-            -0.5* params.window_width,
             0.0,
+            -0.5* params.window_width,
+            #0.0,
             0.0 ))
         '''
         first_vert = ((
@@ -343,7 +345,7 @@ def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayo
             loc[0][2] ))
         '''
         
-        '''
+        
         vec0 = mathutils.Vector( (first_vert[0], first_vert[1], first_vert[2]) )
         vec1 = mathutils.Vector( (second_vert[0], second_vert[1], second_vert[2]) )
 
@@ -353,19 +355,22 @@ def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayo
         norm = myvec.cross(z_vec)
         norm.normalize()
 
+        vec_edge = Utils.vec_from_verts(second_vert, first_vert)
+        vec_0 = mathutils.Vector((0.0, 1.0, 0.0))
+        rot = vec_edge.xy.angle_signed(vec_0.xy) - 0.5 * math.pi
+
         mat = mathutils.Matrix.Rotation( math.radians(loc[1]), 4, (0,0,1) )
-        #euler = mathutils.Euler( (0.0, 0.0, math.radians(loc[1]) ) )
-        eul = mathutils.Euler( (0.0,0.0,0.0) )
-        eul.z = loc[1] + ( 0.5 * math.pi )
-        vec0.rotate( eul )
-        vec1.rotate( eul )
+        euler = mathutils.Euler( (0.0, 0.0, 0.0) )
+        euler.z = rot + math.pi
+        vec0.rotate( euler )
+        vec1.rotate( euler )
 
         first_vert = ( vec0.x, vec0.y, vec0.z )
         second_vert = ( vec1.x, vec1.y, vec1.z )
-        '''
+        
 
-        edge.append( first_vert )
         edge.append( second_vert )
+        edge.append( first_vert )
         edges.append(edge)
 
 
