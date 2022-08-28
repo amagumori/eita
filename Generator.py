@@ -30,6 +30,8 @@ from . import GenUtils
 import time
 import os
 
+import pprint
+
 
 class MyGenerator(bpy.types.Operator):
     bl_idname = "pbg.my_generate_building"
@@ -65,8 +67,9 @@ class MyGenerator(bpy.types.Operator):
         bm_section.to_mesh(m_section)
         '''
 
-        #my_window = GenMesh.gen_mesh_windows(context, params_general, params_windows)
-        #group.objects.link(m_section)
+        my_window = GenMesh.gen_mesh_windows(context, params_general, params_windows)
+        group.objects.link(my_window)
+        my_window_around = GenMesh.gen_mesh_windows_around(context, params_general, params_windows)
         my_bar = NewMesh.gen_mesh_window_cage(context, params_cage, params_general)
 
         # just using these window params as arbitrary values.
@@ -129,16 +132,35 @@ class FootprintTest(bpy.types.Operator):
 
         footprint = GenLayout.gen_footprint(params_footprint)
 
+        test_first_floor_print = GenLayout.generate_first_floor_print( footprint, params_footprint )
+
+        # @TODO IMPLEMENT THIS FUNC
+        #balcony_edges = GenLayout.pick_out_balcony_edges( footprint ) 
+
         door_position = ((0.0, 0.5*params_footprint.building_depth+params_footprint.building_wedge_depth, params_general.floor_offset), 0)
         layout = GenLayout.gen_layout(params_general, footprint, door_position)
         wall_section_mesh = GenUtils.gen_wall_section_mesh(params_walls.type, wall_section_height, params_walls.section_size, params_walls.mortar_size, params_walls.row_count)
         
+        '''
         obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())
         group.objects.link(obj_wall)
 
         balcony_section = NewMesh.gen_balcony_section()
         balcony = NewMesh.gen_balcony( context, footprint, balcony_section )
         group.objects.link(balcony)
+        '''
+
+        balcony_edges = GenLayout.pick_out_balcony_edges(footprint, params_footprint, 'front_only' )
+        balcony_section = NewMesh.gen_balcony_section()
+        #test_list.append( (10,0,0) )
+
+        for i in range( 0, len(balcony_edges) ):
+            print( balcony_edges[i] )
+        balcony = NewMesh.gen_balcony(context, balcony_edges, balcony_section, False)
+        group.objects.link(balcony)
+
+        #first_floor = GenMesh.gen_first_floor( context, balc, params_general )
+        #group.objects.link(first_floor)
 
         return {"FINISHED"}
 
@@ -158,6 +180,7 @@ class Generator(bpy.types.Operator):
         # delete all objects from group
         for obj in group.objects:
             bpy.data.objects.remove(obj)
+
 
         # generate stuff needed for other functions that generate geometry
         time_start = time.time()
@@ -181,6 +204,13 @@ class Generator(bpy.types.Operator):
 
         footprint = GenLayout.gen_footprint(params_footprint)
         layout = GenLayout.gen_layout(params_general, footprint, door_position)
+
+        balc_edges = NewMesh.get_edges_from_window_positions( context, params_general, layout["window_positions"] )
+
+        # @TODO REMOVEME
+        pp = pprint.PrettyPrinter( indent=4 )
+        pp.pprint( balc_edges )
+
         section_element_list = GenUtils.gen_section_element_list(params_section)
         section_mesh = GenUtils.gen_section_mesh(section_element_list, params_general.separator_height,
                                                  params_general.separator_width)
@@ -201,10 +231,14 @@ class Generator(bpy.types.Operator):
             group.objects.link(obj_separator)
 
             ## NEW!!
+           
+            #balcony_edges = GenLayout.pick_out_balcony_edges(footprint, params_footprint, 'front_only' )
             balcony_section = NewMesh.gen_balcony_section()
-            balcony = NewMesh.gen_balcony(context, footprint, balcony_section)
+            balcony = NewMesh.gen_window_balcony(context, balcony_section, params_general.window_width)
+            apply_positions_inverse( balcony, layout["window_positions"], group )
+            #balcony = NewMesh.gen_balcony_from_loops(context, balc_edges, balcony_section)
             group.objects.link(balcony)
-
+            
             separator_positions = list()
             for i in range(0, params_general.floor_count+1):
                 separator_positions.append(((0, 0, params_general.floor_offset + wall_section_height +
@@ -332,6 +366,31 @@ def apply_positions(obj: bpy.types.Object, positions: list, group):
         # link it to the scene
         bpy.context.collection.objects.link(dup)
 # end apply_positions
+
+def apply_positions_inverse(obj: bpy.types.Object, positions: list, group):
+    """
+        Duplicates (linked duplicate) the given object onto the given positions
+        applies the given rotation
+    Args:
+        group: group where to keep the object
+        obj: object to duplicate, origin should be in (0, 0, 0)
+        positions: list(tuple(tuple(x,y,z), rot)) - object positions and rotations
+    Returns:
+
+    """
+    for position in positions:
+        dup = obj.copy()
+        group.objects.link(dup)
+        # move it
+        dup.location.x = position[0][0]
+        dup.location.y = position[0][1]
+        dup.location.z = position[0][2]
+        # rotate it
+        dup.rotation_euler.z = -position[1]
+        # link it to the scene
+        bpy.context.collection.objects.link(dup)
+# end apply_positions
+
 
 
 def load_materials() -> dict:

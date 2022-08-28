@@ -448,6 +448,47 @@ def gen_mesh_pillar(context: bpy.types.Context, params_pillar: ParamsPillar, par
     return obj
 # end generate_pillars
 
+def gen_first_floor( context: bpy.types.Context, footprint: list, params_general: GenLayout.ParamsGeneral ) -> bpy.types.Object:
+
+    ''' 
+    @TODO
+    it makes much more sense to build a new first-floor-footprint, then extrude along that
+    already correct edge, vs iterating faces and inset+extruding.
+
+    build new footprint by identifying building facing and major / minor axis,
+    then rebuild accordingly.  this will become its own routine, probably in GenLayout, later.
+    '''
+
+    bm = bmesh.new()
+    '''
+    section_verts = list()
+    section_verts.append( [0,0,0] )
+    section_verts.append( [0,0,params_general.floor_height] ) 
+
+    section_edges = list()
+    section_edges.append( [ section_verts[0], section_verts[1] ] )
+
+    section_mesh = bpy.data.meshes.new(name="FlatWall")
+    #section_mesh.from_pydata(section_verts, section_edges, [])
+    section_mesh.from_pydata(section_verts, ( section_verts[0], section_verts[1] ), [])
+    section_mesh.update()
+    '''
+
+    section_list = GenUtils.gen_simple_section_list( 0, params_general.floor_height )
+    mash = GenUtils.gen_section_mesh( section_list, params_general.floor_height, 0 )
+
+   
+    mesh = Utils.extrude_along_edges( mash, footprint, False )
+    bm.from_mesh(mesh)
+    
+    mes = bpy.data.meshes.new("FirstFloor")
+    bm.to_mesh(mes)
+    bm.free()
+
+    obj = bpy.data.objects.new("testFirstFloor", mes)
+    context.scene.collection.objects.link(obj)
+    return obj
+
 
 def gen_mesh_wall(context: bpy.types.Context, wall_loops: list, section_mesh: bpy.types.Mesh) -> bpy.types.Object:
     """

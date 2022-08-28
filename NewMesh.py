@@ -2,6 +2,7 @@ import bmesh
 import bpy
 import mathutils
 import math
+import pprint
 from . import Utils
 from . import GenUtils
 from . import GenLayout
@@ -214,13 +215,13 @@ def gen_balcony_section () -> bpy.types.Mesh:
         A mesh following the sequence, in Y-Z plane, starting in (0,0,0), with width and height of 1 blender unit.
     """
 
-    width = 2 
-    height = 2 
+    width = 1 
+    height = 1 
 
-    thickness = 0.2
-    balcony_depth = 1
-    chamfer = 0.05
-    balcony_height = 0.5
+    thickness = 0.05
+    balcony_depth = 2
+    chamfer = 0.03
+    balcony_height = 0.6
 
 
     verts = list()
@@ -256,8 +257,10 @@ def gen_balcony_section () -> bpy.types.Mesh:
     return m
 # end generate_section_mesh
 
-def gen_balcony(context: bpy.types.Context, footprint: list,
-                             section_mesh: bpy.types.Mesh) -> bpy.types.Object:
+def gen_balcony(context: bpy.types.Context, 
+                footprint: list,
+                section_mesh: bpy.types.Mesh,
+                is_loop: bool ) -> bpy.types.Object:
     """
         Creates the floor separator object
         floor separator will be placed at the origin (0, 0, 0)
@@ -270,10 +273,119 @@ def gen_balcony(context: bpy.types.Context, footprint: list,
     """
 
     # extrude the section along the footprint to create the separator
-    m = Utils.extrude_along_edges(section_mesh, footprint, True)
+    m = Utils.extrude_along_edges(section_mesh, footprint, is_loop)
 
     # create a new object, link it to the scene and return it
     obj = bpy.data.objects.new("beppBalcony", m)
     context.collection.objects.link(obj)
     return obj
 # end gen_mesh_floor_separator
+
+def gen_window_balcony(context: bpy.types.Context, 
+        section_mesh: bpy.types.Mesh, width ) -> bpy.types.Object:
+    
+    edge = list()
+
+    first_vert = list()
+
+    first_vert = ((
+        -0.5 * width,
+        0.0,
+        0.0 ))
+    second_vert = list()
+    second_vert = ((
+        0.5 * width,
+        0.0,
+        0.0 ))
+    edge.append( second_vert )
+    edge.append( first_vert )
+
+    # extrude the section along the footprint to create the separator
+    m = Utils.extrude_along_edges(section_mesh, edge, False)
+
+    # create a new object, link it to the scene and return it
+    obj = bpy.data.objects.new("windowBalcony", m)
+    context.collection.objects.link(obj)
+    return obj
+# end gen_mesh_floor_separator
+
+
+def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayout.ParamsGeneral, window_positions: list ) -> list:
+    edges = list()
+
+    # need to build edges first in same plane as windows
+    # then move to window_pos + rot
+
+    for loc in window_positions:
+        pprint.pprint(loc[1])
+        edge = list()
+
+        first_vert = list()
+
+        first_vert = ((
+            0.5 * params.window_width,
+            0.0,
+            0.0 ))
+        second_vert = list()
+        second_vert = ((
+            -0.5* params.window_width,
+            0.0,
+            0.0 ))
+        '''
+        first_vert = ((
+            loc[0][0] + 0.5 * params.window_width,
+            loc[0][1],
+            loc[0][2] ))
+        second_vert = list()
+        second_vert = ((
+            loc[0][0] - 0.5 * params.window_width,
+            loc[0][1],
+            loc[0][2] ))
+        '''
+        
+        '''
+        vec0 = mathutils.Vector( (first_vert[0], first_vert[1], first_vert[2]) )
+        vec1 = mathutils.Vector( (second_vert[0], second_vert[1], second_vert[2]) )
+
+        myvec = vec1 - vec0
+        z_vec = mathutils.Vector( (0.0,0.0,1.0) )
+
+        norm = myvec.cross(z_vec)
+        norm.normalize()
+
+        mat = mathutils.Matrix.Rotation( math.radians(loc[1]), 4, (0,0,1) )
+        #euler = mathutils.Euler( (0.0, 0.0, math.radians(loc[1]) ) )
+        eul = mathutils.Euler( (0.0,0.0,0.0) )
+        eul.z = loc[1] + ( 0.5 * math.pi )
+        vec0.rotate( eul )
+        vec1.rotate( eul )
+
+        first_vert = ( vec0.x, vec0.y, vec0.z )
+        second_vert = ( vec1.x, vec1.y, vec1.z )
+        '''
+
+        edge.append( first_vert )
+        edge.append( second_vert )
+        edges.append(edge)
+
+
+    return edges
+
+def gen_balcony_from_loops(context: bpy.types.Context, 
+                loops: list,
+                section_mesh: bpy.types.Mesh ) -> bpy.types.Object:
+    
+    bm = bmesh.new()
+    for loop in loops:
+        mesh = Utils.extrude_along_edges( section_mesh.copy(), loop, False )
+        bm.from_mesh(mesh)
+
+    m = bpy.data.meshes.new( "windowBalcony")
+    bm.to_mesh(m)
+    bm.free()
+
+    # create a new object, link it to the scene and return it
+    obj = bpy.data.objects.new("beppBalcony", m)
+    context.collection.objects.link(obj)
+    return obj
+

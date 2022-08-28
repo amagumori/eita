@@ -25,6 +25,21 @@ from bpy.props import FloatProperty, BoolProperty, EnumProperty, IntProperty
 class PBGPropertyGroup(PropertyGroup):
     # TODO: docstring
 
+    # adding new params for inset front face
+    front_face_inset_from_edge : FloatProperty(
+        name="Distance of front wall inset from edge",
+        default=2.0
+    )
+    front_face_inset_depth : FloatProperty(
+        name="Depth to inset front face",
+        default=5.0
+    )
+
+    front_face_inset_chamfer : FloatProperty(
+        name="Front face inset chamfer",
+        default= 0.4
+    )
+
     building_width : FloatProperty(
         name="Building width",
         default=25.0
@@ -577,6 +592,13 @@ class PBGToolbarGeneralPanel(Panel):
         properties = context.scene.PBGPropertyGroup
 
         col = layout.column(align=True)
+        col.label(text="NEW - Front Face Inset props")
+
+        col.prop(properties, "front_face_inset_from_edge")
+        col.prop(properties, "front_face_inset_depth")
+        col.prop(properties, "front_face_inset_chamfer")
+
+
         col.label(text="Overall Building Dimensions")
         col.prop(properties, "building_width")
         col.prop(properties, "building_depth")

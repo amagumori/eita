@@ -72,12 +72,16 @@ class ParamsGeneral:
 
 class ParamsFootprint:
     # TODO: docstring
-    def __init__(self, building_width, building_depth, building_chamfer, building_wedge_depth, building_wedge_width):
+    def __init__(self, building_width, building_depth, building_chamfer, building_wedge_depth, building_wedge_width, front_face_inset_from_edge, front_face_inset_depth, front_face_inset_chamfer):
         self.building_width = building_width
         self.building_depth = building_depth
         self.building_chamfer = building_chamfer
         self.building_wedge_depth = building_wedge_depth
         self.building_wedge_width = building_wedge_width
+
+        self.front_face_inset_from_edge = front_face_inset_from_edge
+        self.front_face_inset_depth = front_face_inset_depth 
+        self.front_face_inset_chamfer = front_face_inset_chamfer  
     # end init
 
     @staticmethod
@@ -88,12 +92,19 @@ class ParamsFootprint:
             building_depth=properties.building_depth,
             building_chamfer=properties.building_chamfer,
             building_wedge_depth=properties.building_wedge_depth,
-            building_wedge_width=properties.building_wedge_width
+            building_wedge_width=properties.building_wedge_width,
+            front_face_inset_from_edge=properties.front_face_inset_from_edge,
+            front_face_inset_depth=properties.front_face_inset_depth,
+            front_face_inset_chamfer=properties.front_face_inset_chamfer
         )
         return params
     # end from_ui
 # end ParamsFootprint
 
+# we will maybe want in the future gen nonstandard footprint
+# can build more complicated arbitrary-poly footprints, etc.
+
+# @TODO also need to implement gen_internal_walls and gen_internal_floors.
 
 def gen_footprint(params_footprint: ParamsFootprint) -> list:
     """
@@ -102,11 +113,29 @@ def gen_footprint(params_footprint: ParamsFootprint) -> list:
         params_footprint: Instance of ParamsFootprint class
     Returns:
         list(tuple(x,y,z)) - a list containing ordered verts, which define the building footprint.
-    """
+    
 
-    ''' if 
+    this is built with "wedge" face facing north
+
+    if 
     "full-floor non-wrap balconies" then we export lists for each side of the building's flat part"
-    '''
+
+    want to store:
+        MAJOR and MINOR axis of footprint
+        a reference to each edge of building
+        whether edge is > window-width
+    """ 
+   
+    major_edge = [
+            (-0.5 * params_footprint.building_width, 0.5 * params_footprint.building_depth, 0),
+            (0.5 * params_footprint.building_width, 0.5 * params_footprint.building_depth, 0)
+    ]
+    major_dy = major_edge[1][1] - major_edge[0][1]
+    major_dx = major_edge[1][0] - major_edge[0][0]
+
+    # which way is the building pointing.  normal vector of the front face
+    # this points out towards the street.
+    building_facing = ( major_dy, -major_dx, 0 )
 
     layout = list()
     # bottom left corner
@@ -158,6 +187,103 @@ def gen_footprint(params_footprint: ParamsFootprint) -> list:
     return layout
 # end gen_footprint
 
+def generate_first_floor_print ( footprint: list, params_footprint: ParamsFootprint ) -> list:
+    new_footprint = list()
+    # just impl this path for now..a
+    # inset from edge
+    # inset depth
+    # chamfer on inset
+    building_width = params_footprint.building_width
+    inset_from_edge = params_footprint.front_face_inset_from_edge
+    inset_depth = params_footprint.front_face_inset_depth
+    inset_chamfer = params_footprint.front_face_inset_chamfer
+
+
+    if params_footprint.building_chamfer > 0:
+        # bottom left corner
+        new_footprint.append( footprint[0] ) 
+        new_footprint.append( footprint[1] )
+        
+        # top left
+        new_footprint.append( footprint[2] )
+        new_footprint.append( footprint[3] )
+
+        # inset front face ( pointing +y)
+        new_footprint.append((
+                footprint[3][0] + inset_from_edge - inset_chamfer,
+                footprint[3][1],
+                footprint[3][2]))
+        new_footprint.append((
+                footprint[3][0] + inset_from_edge,
+                footprint[3][1] - inset_chamfer,
+                footprint[3][2]))
+
+        new_footprint.append((
+                footprint[3][0] + inset_from_edge,
+                footprint[3][1] - inset_depth + inset_chamfer,
+                footprint[3][2]))
+        new_footprint.append((
+                footprint[3][0] + inset_from_edge + inset_chamfer,
+                footprint[3][1] - inset_depth,
+                footprint[3][2]))
+
+        new_footprint.append((
+                (0.5 * building_width) - inset_from_edge - inset_chamfer,
+                footprint[3][1] - inset_depth,
+                footprint[3][2]))
+
+        new_footprint.append((
+                (0.5 *building_width) - inset_from_edge,
+                footprint[3][1] - inset_depth + inset_chamfer,
+                footprint[3][2]))
+
+        new_footprint.append((
+                (0.5 * building_width) - inset_from_edge,
+                footprint[3][1] - inset_chamfer,
+                footprint[3][2]))
+
+        new_footprint.append((
+                (0.5 * building_width) - inset_from_edge + inset_chamfer,
+                footprint[3][1],
+                footprint[3][2]))
+        
+        # we'll end it here and return to the traditional footprint vert placing
+        
+        # top right (+x +y )
+        new_footprint.append((0.5 * params_footprint.building_width - params_footprint.building_chamfer, 0.5 * params_footprint.building_depth, 0))
+
+        new_footprint.append((0.5 * params_footprint.building_width, 0.5 * params_footprint.building_depth - params_footprint.building_chamfer, 0))
+
+        # bottom right
+        new_footprint.append((0.5 * params_footprint.building_width, -0.5 * params_footprint.building_depth + params_footprint.building_chamfer, 0))
+        new_footprint.append((0.5 * params_footprint.building_width - params_footprint.building_chamfer, -0.5 * params_footprint.building_depth, 0))
+        
+        return new_footprint 
+
+def pick_out_balcony_edges ( footprint: list, params: ParamsFootprint, balcony_type: str ) -> list:
+    balcony = list()
+    
+    if balcony_type == 'front_and_sides_wraparound':
+        # then you really just take the existing footprint????
+        # back building face is fixed up in wall_loops routine
+        # this works as intended...
+        # footprint.append( footprint[0] )
+        balcony.append( footprint[1:-1] )
+        return footprint
+
+    if balcony_type == 'front_only':
+        if params.building_chamfer > 0:
+            balcony.append( footprint[3] )
+            balcony.append( footprint[4] )
+            return balcony
+            # and that's our edge - excluding chamfer
+        else:
+            # one vertex per corner, starting bottom left.
+            balcony.append( footprint[1] )
+            balcony.append( footprint[2] )
+            return balcony
+
+    #if balcony_type == 'all_sides':
 
 def gen_layout(params_general: ParamsGeneral, footprint: list, door_position: tuple) -> dict:
     """
