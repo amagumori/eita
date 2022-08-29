@@ -196,6 +196,8 @@ class Generator(bpy.types.Operator):
         params_roof = GenMesh.ParamsRoof.from_ui()
         params_door = GenMesh.ParamsDoor.from_ui()
 
+        params_cage = NewMesh.ParamsWindowCage.from_ui()
+
         door_position = ((0.0, 0.5*params_footprint.building_depth+params_footprint.building_wedge_depth,
                           params_general.floor_offset), 0)
         door_positions = list()
@@ -231,6 +233,9 @@ class Generator(bpy.types.Operator):
             group.objects.link(obj_separator)
 
             ## NEW!!
+
+            cage = NewMesh.gen_mesh_window_cage( context, params_cage, params_windows, params_general )
+            apply_positions( cage, layout["window_positions"], group )
            
             #balcony_edges = GenLayout.pick_out_balcony_edges(footprint, params_footprint, 'front_only' )
             balcony_section = NewMesh.gen_balcony_section()

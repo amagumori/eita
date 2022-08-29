@@ -6,6 +6,7 @@ import pprint
 from . import Utils
 from . import GenUtils
 from . import GenLayout
+from . import GenMesh
 
 class ParamsWindowCage:
     def __init__(self,
@@ -52,19 +53,7 @@ class ParamsWindowCage:
     # end from_ui
 # end ParamsWindowCage
 
-def gen_mesh_window_cage( context: bpy.types.Context,
-                          params_cage: ParamsWindowCage,
-                          params_general: GenLayout.ParamsGeneral ) -> bpy.types.Object:
-    """
-    """
-
-    bm = bmesh.new()
-
-    bar_section_list = GenUtils.gen_simple_section_list(params_cage.bar_thickness, params_cage.bar_thickness )
-    bar_section_mesh = GenUtils.gen_section_mesh(bar_section_list, params_cage.bar_thickness, params_cage.bar_thickness)
-
-    layout_vertical  = list()
-
+'''
     layout_vertical.append((-0.5 * params_cage.width, -params_cage.depth, 0.0))
     layout_vertical.append((-0.5 * params_cage.width, params_cage.depth, 0.0))
     layout_vertical.append((0.5 * params_cage.width, params_cage.depth, 0.0))
@@ -77,13 +66,42 @@ def gen_mesh_window_cage( context: bpy.types.Context,
     layout_horizontal.append((-0.5 * params_cage.height, params_cage.depth, 0.0))
     layout_horizontal.append((0.5 * params_cage.height, params_cage.depth, 0.0))
     layout_horizontal.append((0.5 * params_cage.height, -params_cage.depth, 0.0))
-   
+    '''
+
+def gen_mesh_window_cage( context: bpy.types.Context,
+                          params_cage: ParamsWindowCage,
+                          params_window: GenMesh.ParamsWindows,
+                          params_general: GenLayout.ParamsGeneral ) -> bpy.types.Object:
+    """
+    """
+
+    bm = bmesh.new()
+
+    bar_section_list = GenUtils.gen_simple_section_list(params_cage.bar_thickness, params_cage.bar_thickness )
+    bar_section_mesh = GenUtils.gen_section_mesh(bar_section_list, params_cage.bar_thickness, params_cage.bar_thickness)
+
+    layout_vertical  = list()
+    
+    layout_vertical.append((-0.5 * params_general.window_width, -params_cage.depth, 0.0))
+    layout_vertical.append((-0.5 * params_general.window_width, params_cage.depth, 0.0))
+    layout_vertical.append((0.5 * params_general.window_width, params_cage.depth, 0.0))
+    layout_vertical.append((0.5 * params_general.window_width, -params_cage.depth, 0.0))
+
+    layout_horizontal = list()
+
+    layout_horizontal.append((-0.5 * params_general.window_height, -params_cage.depth, 0.0))
+    layout_horizontal.append((-0.5 * params_general.window_height, params_cage.depth, 0.0))
+    layout_horizontal.append((0.5 * params_general.window_height, params_cage.depth, 0.0))
+    layout_horizontal.append((0.5 * params_general.window_height, -params_cage.depth, 0.0))
+    
     m = Utils.extrude_along_edges(bar_section_mesh, layout_vertical, False)
 
     bm.from_mesh(m)
     geo = bm.verts[:] + bm.edges[:] + bm.faces[:]
     mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
-    steps = int( params_cage.height // params_cage.spacing_vertical )
+    #steps = int( params_cage.height // params_cage.spacing_vertical )
+    steps = int( params_general.window_height // params_cage.spacing_vertical )
+    print( "STEPS - VERTICAL ", steps )
     bmesh.ops.spin(
             bm,
             geom=geo,
@@ -116,8 +134,8 @@ def gen_mesh_window_cage( context: bpy.types.Context,
 
     geo = bmosh.verts[:] + bmosh.edges[:] + bmosh.faces[:]
     mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
-    steps = int( params_cage.width // params_cage.spacing_horizontal )
-    
+    steps = int( params_general.window_width // params_cage.spacing_horizontal )
+    print( "STEPS - HORIZONTAL - ", steps )
     bmesh.ops.spin(
             bmosh,
             geom=geo,
@@ -133,7 +151,7 @@ def gen_mesh_window_cage( context: bpy.types.Context,
 
     vts = bmosh.verts[:]
     bmesh.ops.translate( bmosh,
-            vec=( -0.5*params_cage.width, 0.0, 0.5*params_cage.height),
+            vec=( -0.5*params_general.window_width, 0.0, 0.5*params_general.window_height),
             space=mat_loc,
             verts=vts,
             use_shapekey=False)
@@ -141,9 +159,17 @@ def gen_mesh_window_cage( context: bpy.types.Context,
     mtwo = bpy.data.meshes.new("windowCageBarVertical")
     bmosh.to_mesh(mtwo)
     bmosh.free()
-    new_obj_two = bpy.data.objects.new("windowCageBarVertical", mtwo)
-    context.scene.collection.objects.link(new_obj_two)
+    #new_obj_two = bpy.data.objects.new("windowCageBarVertical", mtwo)
+    #context.scene.collection.objects.link(new_obj_two)
     
+    bm.from_mesh( mtwo )
+    
+    vts = bm.verts[:]
+    bmesh.ops.translate( bm,
+            vec=( 0.0, 0.0, params_general.window_offset ),
+            space=mat_loc,
+            verts=vts,
+            use_shapekey=False)
 
     m = bpy.data.meshes.new("windowCageBar")
     bm.to_mesh(m)
