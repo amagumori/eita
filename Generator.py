@@ -236,21 +236,29 @@ class Generator(bpy.types.Operator):
 
             cage = NewMesh.gen_mesh_window_cage( context, params_cage, params_windows, params_general )
             apply_positions( cage, layout["window_positions"], group )
-           
-            #balcony_edges = GenLayout.pick_out_balcony_edges(footprint, params_footprint, 'front_only' )
+            
+            awning = NewMesh.gen_window_awning( context, params_general )
+            apply_positions( awning, layout["window_positions"], group )
+
+
+            '''
+            balcony_edges = GenLayout.pick_out_balcony_edges(footprint, params_footprint, 'front_only' )
             balcony_section = NewMesh.gen_balcony_section()
-            balcony = NewMesh.gen_window_balcony(context, balcony_section, params_general.window_width)
-            apply_positions_inverse( balcony, layout["window_positions"], group )
+            #balcony = NewMesh.gen_window_balcony(context, balcony_section, params_general.window_width)
+            balcony = NewMesh.gen_balcony(context, balcony_edges, balcony_section, False )
+            #apply_positions_inverse( balcony, layout["window_positions"], group )
             #balcony = NewMesh.gen_balcony_from_loops(context, balc_edges, balcony_section)
             group.objects.link(balcony)
-            
+            '''
+
             separator_positions = list()
             for i in range(0, params_general.floor_count+1):
                 separator_positions.append(((0, 0, params_general.floor_offset + wall_section_height +
                                             i*params_general.floor_height), 0))
             apply_positions(obj_separator, separator_positions, group)
-            ##
-            apply_positions(balcony, separator_positions, group)
+            # NEW
+            #apply_positions(balcony, separator_positions, group)
+
             obj_separator.hide_set(True)
         # end if
         obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())

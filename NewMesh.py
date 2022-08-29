@@ -340,6 +340,71 @@ def gen_window_balcony(context: bpy.types.Context,
     return obj
 # end gen_mesh_floor_separator
 
+def gen_window_awning ( context: bpy.types.Context, params_general: GenLayout.ParamsGeneral ) -> bpy.types.Object:
+    awning_profile_list = GenUtils.gen_awning_section_list( params_general.window_width,
+                                                            0.05,
+                                                            0.05,
+                                                            0.05 )
+
+    awning_profile = GenUtils.gen_plane_profile( awning_profile_list, params_general.window_width )
+
+    section = bmesh.new()
+    section.from_mesh( awning_profile )
+
+    mat_loc = mathutils.Matrix.Translation( ( 0.0, 0.0, 0.0 ) )
+    depth = 1
+    down = 0.2
+
+    geo = bmesh.ops.extrude_edge_only( section,
+            edges= section.edges[:],
+            use_normal_flip=False,
+            use_select_history=False )
+   
+    verts_to_translate = [ele for ele in geo["geom"] if isinstance(ele, bmesh.types.BMVert)]
+
+    bmesh.ops.translate( section,
+            vec=(depth, 0.0, 0.0),
+            space=mat_loc,
+            verts=verts_to_translate,
+            use_shapekey=False )
+
+    mat_rot = mathutils.Matrix.Rotation( math.radians( -90 ), 3, "Z" )
+
+    vts = section.verts[:]
+
+    bmesh.ops.rotate( section,
+            cent=(0,0,0),
+            matrix = mat_rot,
+            verts = vts,
+            space= mat_loc,
+            use_shapekey = False )
+
+    slope_rot = mathutils.Matrix.Rotation( math.radians( -15 ), 3, "X" )
+
+    bmesh.ops.rotate( section,
+            cent=(0,0,0),
+            matrix = slope_rot,
+            verts = vts,
+            space= mat_loc,
+            use_shapekey = False )
+
+    #vts = section.verts[:]
+
+    bmesh.ops.translate( section,
+            vec= ( -params_general.window_width, depth, 0.0 ),
+            space= mat_loc,
+            verts= vts,
+            use_shapekey= False )
+    
+
+    m = bpy.data.meshes.new('test_awning')
+    section.to_mesh( m )
+    section.free()
+
+    obj = bpy.data.objects.new( "window_awning", m )
+    context.scene.collection.objects.link( obj )
+
+    return obj
 
 def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayout.ParamsGeneral, window_positions: list ) -> list:
     edges = list()
