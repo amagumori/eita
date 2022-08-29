@@ -386,7 +386,7 @@ def apply_positions_inverse(obj: bpy.types.Object, positions: list, group):
         dup.location.y = position[0][1]
         dup.location.z = position[0][2]
         # rotate it
-        dup.rotation_euler.z = -position[1]
+        dup.rotation_euler.z = position[1] + ( math.pi )
         # link it to the scene
         bpy.context.collection.objects.link(dup)
 # end apply_positions

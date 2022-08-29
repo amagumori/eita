@@ -200,6 +200,11 @@ class ParamsAwning:
     # end from_ui
 # end ParamsWindowCage
 
+def gen_awning_from_footprint() -> bpy.types.Mesh:
+
+    awning_profile_list = GenUtils.gen_awning_section_list(25, 3, 1, 0.03)
+    awning_profile = GenUtils.gen_plane_profile( awning_profile_list, width )
+
 
 def gen_balcony_section () -> bpy.types.Mesh:
     """
@@ -289,16 +294,16 @@ def gen_window_balcony(context: bpy.types.Context,
     first_vert = list()
 
     first_vert = ((
-        -0.5 * width,
+        0.5 * width,
         0.0,
         0.0 ))
     second_vert = list()
     second_vert = ((
-        0.5 * width,
+        -0.5 * width,
         0.0,
         0.0 ))
-    edge.append( second_vert )
     edge.append( first_vert )
+    edge.append( second_vert )
 
     # extrude the section along the footprint to create the separator
     m = Utils.extrude_along_edges(section_mesh, edge, False)
@@ -323,13 +328,13 @@ def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayo
         first_vert = list()
 
         first_vert = ((
-            0.0,
+            0.5 * params.window_width,
             0.5 * params.window_width,
             #0.0,
             0.0 ))
         second_vert = list()
         second_vert = ((
-            0.0,
+            -0.5 * params.window_width,
             -0.5* params.window_width,
             #0.0,
             0.0 ))
@@ -365,8 +370,8 @@ def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayo
         vec0.rotate( euler )
         vec1.rotate( euler )
 
-        first_vert = ( vec0.x, vec0.y, vec0.z )
         second_vert = ( vec1.x, vec1.y, vec1.z )
+        first_vert = ( vec0.x, vec0.y, vec0.z )
         
 
         edge.append( second_vert )
