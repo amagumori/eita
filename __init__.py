@@ -47,10 +47,12 @@ if "MyGenerator" in locals():
     importlib.reload(MyGenerator)
 if "GenMesh" in locals():
     importlib.reload(GenMesh)
-if "GenLayout" in locals():
-    importlib.reload(GenLayout)
 if "NewMesh" in locals():
     importlib.reload(NewMesh)
+if "NewLayout" in locals():
+    importlib.reload(NewLayout)
+if "GenLayout" in locals():
+    importlib.reload(GenLayout)
 if "GenUtils" in locals():
     importlib.reload(GenUtils)
 if "Constants" in locals():

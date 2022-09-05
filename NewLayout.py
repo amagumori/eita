@@ -6,14 +6,14 @@ from . import Utils
 class ParamsFootprint:
     # TODO: docstring
     # this is getting ridiculous.
-    def __init__(self, left_face, bottom_face, right_face, top_face, building_width, building_depth):
+    def __init__(self, left, bottom, right, top, building_width, building_depth):
 
         self.building_width = building_width
         self.building_depth = building_depth
-        self.left = left_face
-        self.top = top_face
-        self.right = right_face
-        self.bottom = bottom_face
+        self.left = left
+        self.top = top
+        self.right = right
+        self.bottom = bottom
 
     @staticmethod
     def from_ui():
@@ -124,10 +124,7 @@ MED FACE - sides
     
 '''
 
-def new_gen_footprint(left: ParamsFootprintFace, 
-                      top: ParamsFootprintFace,
-                      right: ParamsFootprintFace,
-                      bottom: ParamsFootprintFace ) -> list:
+def new_gen_footprint(params_footprint: ParamsFootprint) -> list:
     """
         Generates the building footprint
     Args:
@@ -150,11 +147,12 @@ def new_gen_footprint(left: ParamsFootprintFace,
     width = params_footprint.building_width
     depth = params_footprint.building_depth
 
-    left = params_footprint.left_face
-    bottom = params_footprint.bottom_face
-    right = params_footprint.right_face
-    top = params_footprint.top_face
-   
+    left = params_footprint.left
+    bottom = params_footprint.bottom
+    right = params_footprint.right
+    top = params_footprint.top
+  
+    '''
     major_edge = [
             (-0.5 * params_footprint.building_width, 0.5 * params_footprint.building_depth, 0),
             (0.5 * params_footprint.building_width, 0.5 * params_footprint.building_depth, 0)
@@ -165,6 +163,8 @@ def new_gen_footprint(left: ParamsFootprintFace,
     # which way is the building pointing.  normal vector of the front face
     # this points out towards the street.
     building_facing = ( major_dy, -major_dx, 0 )
+    '''
+
 
     layout = list()
 
@@ -299,7 +299,7 @@ def new_gen_footprint(left: ParamsFootprintFace,
     for face in range(bottom.subface_count):
         # iterating along Y in + direction
         # don't even worry about chamfer for now.
-        if marker > 0.5 * width:
+        if marker < -0.5 * width:
             break
 
         layout.append((
@@ -314,7 +314,7 @@ def new_gen_footprint(left: ParamsFootprintFace,
 
         layout.append((
             marker - bottom.subface_offset - bottom.subface_width,
-            (-0.5 * depth) + top.subface_depth,
+            (-0.5 * depth) + bottom.subface_depth,
             0 ))
 
         layout.append((
@@ -325,6 +325,7 @@ def new_gen_footprint(left: ParamsFootprintFace,
         marker -= bottom.subface_offset 
         marker -= bottom.subface_width
 
+    layout.append( ( -0.5*width, -0.5 * depth, 0 ) )
     
     return layout
 

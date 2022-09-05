@@ -125,7 +125,11 @@ class FootprintTest(bpy.types.Operator):
             bpy.data.objects.remove(obj)
 
         params_general = GenLayout.ParamsGeneral.from_ui()
-        params_footprint = GenLayout.ParamsFootprint.from_ui()
+        #params_footprint = GenLayout.ParamsFootprint.from_ui()
+        
+        params_footprint = NewLayout.ParamsFootprint.from_ui()
+        new_footprint = NewLayout.new_gen_footprint( params_footprint )
+
         params_walls = GenMesh.ParamsWalls.from_ui()
         
         if params_general.generate_separator == True:
@@ -133,18 +137,14 @@ class FootprintTest(bpy.types.Operator):
         else:
             wall_section_height = params_general.floor_height
 
-        footprint = GenLayout.gen_footprint(params_footprint)
-
-        #new_footprint = NewLayout.new_gen_footprint( 
-
-        test_first_floor_print = GenLayout.generate_first_floor_print( footprint, params_footprint )
+        #test_first_floor_print = GenLayout.generate_first_floor_print( footprint, params_footprint )
 
         # @TODO IMPLEMENT THIS FUNC
         #balcony_edges = GenLayout.pick_out_balcony_edges( footprint ) 
 
-        door_position = ((0.0, 0.5*params_footprint.building_depth+params_footprint.building_wedge_depth, params_general.floor_offset), 0)
-        layout = GenLayout.gen_layout(params_general, footprint, door_position)
-        wall_section_mesh = GenUtils.gen_wall_section_mesh(params_walls.type, wall_section_height, params_walls.section_size, params_walls.mortar_size, params_walls.row_count)
+        #door_position = ((0.0, 0.5*params_footprint.building_depth+params_footprint.building_wedge_depth, params_general.floor_offset), 0)
+        #layout = GenLayout.gen_layout(params_general, footprint, door_position)
+        #wall_section_mesh = GenUtils.gen_wall_section_mesh(params_walls.type, wall_section_height, params_walls.section_size, params_walls.mortar_size, params_walls.row_count)
         
         '''
         obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())
@@ -155,7 +155,7 @@ class FootprintTest(bpy.types.Operator):
         group.objects.link(balcony)
         '''
 
-        balcony_edges = GenLayout.pick_out_balcony_edges(footprint, params_footprint, 'front_only' )
+        balcony_edges = GenLayout.pick_out_balcony_edges(new_footprint, params_footprint, 'front_and_sides_wraparound' )
         balcony_section = NewMesh.gen_balcony_section()
         #test_list.append( (10,0,0) )
 

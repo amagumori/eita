@@ -634,6 +634,8 @@ class NewFootprintPanel(Panel):
         for attr in bottom.__annotations__:
             col.prop( props.bottom, attr )
 
+        row = layout.row(align=True)
+        row.operator("pbg.test_footprint", text="Test new footprint props.")
 
 class WindowCageDebugPanel(Panel):
     # TODO: docstring
