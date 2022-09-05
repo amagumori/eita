@@ -27,6 +27,9 @@ from . import GenMesh
 from . import NewMesh
 from . import Utils
 from . import GenUtils
+
+from . import NewLayout
+
 import time
 import os
 
@@ -131,6 +134,8 @@ class FootprintTest(bpy.types.Operator):
             wall_section_height = params_general.floor_height
 
         footprint = GenLayout.gen_footprint(params_footprint)
+
+        #new_footprint = NewLayout.new_gen_footprint( 
 
         test_first_floor_print = GenLayout.generate_first_floor_print( footprint, params_footprint )
 

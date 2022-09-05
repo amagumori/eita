@@ -19,7 +19,7 @@
 # ##### END GPL LICENSE BLOCK #####
 
 from bpy.types import Panel, PropertyGroup
-from bpy.props import FloatProperty, BoolProperty, EnumProperty, IntProperty
+from bpy.props import PointerProperty, FloatProperty, BoolProperty, EnumProperty, IntProperty
 
 
 class PBGPropertyGroup(PropertyGroup):
@@ -543,9 +543,97 @@ class PBGPropertyGroup(PropertyGroup):
             default=0.3
     )
 
-
+    ####
 
 # end PBGPropertyGroup
+
+class FacePropertyGroup( PropertyGroup ):
+
+    face_types = [
+        ( "MAJOR", "MAJOR", "", 0 ),
+        ( "MEDIUM", "MEDIUM", "", 1 ), 
+        ( "MINOR", "MINOR", "", 2 )
+    ]
+
+    face_type: EnumProperty(
+            items=face_types,
+            default="MEDIUM" )
+
+    subface_count: IntProperty(
+            name="number of subfaces",
+            default=2 )
+
+    subface_offset: FloatProperty(
+            name="subface offset",
+            default=2.0 )
+
+    subface_depth: FloatProperty(
+            name="subface depth",
+            default=5.0 )
+
+    subface_width: FloatProperty(
+            name="subface width",
+            default=7.0 )
+
+
+class FootprintPropertyGroup( PropertyGroup ):
+
+    building_width: FloatProperty(
+            name="building width",
+            default=25 )
+
+    building_depth: FloatProperty(
+            name="building depth",
+            default=25 )
+    
+    # man i don't fucking know.
+
+    left: PointerProperty( type=FacePropertyGroup )
+    top: PointerProperty( type=FacePropertyGroup )
+    right: PointerProperty( type=FacePropertyGroup )
+    bottom: PointerProperty( type=FacePropertyGroup )
+
+    # ---
+
+   
+class NewFootprintPanel(Panel):
+    
+    bl_label = "new footprint panel"
+    bl_category = ""
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_context = "objectmode"
+    
+    def draw( self, context ):
+        layout = self.layout
+        props = context.scene.FootprintPropertyGroup
+        left = props.left
+        top = props.top
+        right = props.right
+        bottom = props.bottom
+
+        col = layout.column(align=True)
+
+        col.label(text="Global footprint props.")
+        col.prop( props, "building_width" )
+        col.prop( props, "building_depth" )
+
+        col.label(text="LEFT FACE")
+        for attr in left.__annotations__:
+            col.prop( props.left, attr )
+        
+        col.label(text="TOP FACE")
+        for attr in top.__annotations__:
+            col.prop( props.top, attr )
+        
+        col.label(text="RIGHT FACE")
+        for attr in right.__annotations__:
+            col.prop( props.right, attr )
+            
+        col.label(text="BOTTOM FACE")
+        for attr in bottom.__annotations__:
+            col.prop( props.bottom, attr )
+
 
 class WindowCageDebugPanel(Panel):
     # TODO: docstring
@@ -576,8 +664,6 @@ class WindowCageDebugPanel(Panel):
         
     # end draw
 # end PBGToolbarPanel
-
-
 
 class PBGToolbarGeneralPanel(Panel):
     # TODO: docstring

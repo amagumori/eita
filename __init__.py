@@ -68,6 +68,15 @@ def register():
     bpy.utils.register_class(UI.WindowCageDebugPanel)
     bpy.utils.register_class(UI.PBGToolbarTestFootprint)
 
+    bpy.utils.register_class( UI.FacePropertyGroup )
+    bpy.utils.register_class( UI.FootprintPropertyGroup )
+
+    bpy.types.Scene.FootprintPropertyGroup = bpy.props.PointerProperty(type=UI.FootprintPropertyGroup)
+
+    bpy.types.Scene.FacePropertyGroup = bpy.props.PointerProperty(type=UI.FacePropertyGroup)
+
+    bpy.utils.register_class( UI.NewFootprintPanel )
+
     #
     bpy.utils.register_class(UI.PBGToolbarGeneralPanel)
     bpy.utils.register_class(UI.PBGToolbarLayoutPanel)
@@ -87,11 +96,18 @@ def register():
 
 def unregister():
     del bpy.types.Scene.PBGPropertyGroup
+    del bpy.types.Scene.FootprintPropertyGroup
+    del bpy.types.Scene.FacePropertyGroup 
+
     bpy.utils.unregister_class(UI.PBGPropertyGroup)
     #
     bpy.utils.unregister_class(UI.WindowCageDebugPanel)
     bpy.utils.unregister_class(Generator.FootprintTest)
 
+    bpy.utils.unregister_class( UI.FacePropertyGroup )
+    bpy.utils.unregister_class( UI.FootprintPropertyGroup )
+
+    bpy.utils.unregister_class( UI.NewFootprintPanel )
 
     bpy.utils.unregister_class(UI.PBGToolbarGeneralPanel)
     bpy.utils.unregister_class(UI.PBGToolbarLayoutPanel)
