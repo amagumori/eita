@@ -21,6 +21,14 @@
 from bpy.types import Panel, PropertyGroup
 from bpy.props import PointerProperty, FloatProperty, BoolProperty, EnumProperty, IntProperty
 
+class KWCPropertyGroup(PropertyGroup):
+    pane_w: FloatProperty(
+            name="pane unit width",
+            default=0.6096)  # 24 in
+    pane_h: FloatProperty(
+            name="pane unit height",
+            default=0.508)   # 20 in
+
 
 class PBGPropertyGroup(PropertyGroup):
     # TODO: docstring

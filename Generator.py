@@ -30,10 +30,33 @@ from . import GenUtils
 
 from . import NewLayout
 
+import numpy
 import time
 import os
 
 import pprint
+
+'''
+class KWCGenerator( bpy.types.Operator):
+    bl_idname = "kwc_generator"
+    bl_label = "KWC generator"
+
+    def invoke( self, context, event):
+        group = bpy.data.collections.get("kwc_group")
+            if not group:
+                bpy.ops.collection.create(name="kwc_group")
+                group = bpy.data.collections.get("kwc_group")
+            # delete all objects from group
+            for obj in group.objects:
+                bpy.data.objects.remove(obj)
+
+        kwc_params = NewLayout.ParamsGeneral.from_ui()
+        kwc_building_params = kwc_params.generate_building_params()
+
+        footprint = NewLayout.kwc_gen_footprint( kwc_building_params )
+
+'''
+
 
 
 class MyGenerator(bpy.types.Operator):

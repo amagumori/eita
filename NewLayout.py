@@ -1,7 +1,184 @@
 import bpy
 import math
 import mathutils
+from enum import Enum
 from . import Utils
+
+#  12 Alley 21, Lane 69, Section 5, Minsheng E Rd
+
+class FaceType(Enum):
+    maj = 1,
+    med = 2,
+    min = 3
+
+def get_divisors(n):
+    for i in range(1, int(n / 2) + 1):
+        if n % i == 0:
+            yield i
+    yield n
+
+def decide ( probability ) -> bool:
+    return random.random() < probability
+
+'''
+class FaceParams:
+    def __init__(self, 
+                 face_type,
+                 room_width,
+                 room_height,
+                 window_width,
+                 window_height,
+                 under_window,
+                 above_window,
+                 around_window):
+
+        self.face_type = face_type
+        self.room_width = room_width
+        self.room_height = room_height
+        self.window_width = window_height
+        self.under_window = under_window
+        self.above_window = above_window
+        self.around_window = around_window
+'''
+
+
+class KWCParams:
+    def __init__(self, pane_w, pane_h):
+        self.pane_w = pane_w
+        self.pane_h = pane_h
+
+    def generate_building_params( self ):
+
+        major_face_min_window_width = 3
+        med_face_min_window_width = 2
+        min_face_min_window_width = 1
+
+        pane_w = params.pane_w 
+        pane_h = params.pane_h
+
+        # width of a "room" or "face" (not a whole wall)
+        room_w = random.randrange( 8, 14 )
+        room_h = random.randrange( 8, 10 )   # this doesn't even need to be random
+
+        # divide vertically - hard constraints like under-window and above-window don't vary much
+        under_window = random.randrange(2, 3)
+        remaining_space = room_h - under_window
+     
+        rem = remaining_space % pane_h
+        if rem == 0:
+            space_above_window = decide(0.7)
+            if space_above_window == True:
+                window_above = 1
+                window_height = remaining_space - window_above
+            else:
+                window_above = 0
+                window_height = remaining_space
+
+        # don't even do the multiple windows bs 
+        # we're going face by face, 1 - 3 windows per and even 3 is a lot
+
+        full_width_window = decide(0.48)
+        if ( full_width_window == True ):
+            multiple_windows = False
+
+        if ( full_width_window == False ):
+            if ( room_w > 16 ):
+                multiple_windows = decide( 0.58 )
+            else:
+                multiple_windows = False
+
+        if ( multiple_windows ):
+            '''
+            around_space = random.randrange(1, 2)
+            between_space = random.randrange(1, 2)
+            '''
+
+            around_space = 1
+            between_space = 2
+
+            available_space = room_w - around_space - between_space 
+            divisors = get_divisors( available_space )
+            div = np.array(divisors)
+            possible_divisors = np.where( div > major_face_min_window_width )
+            
+            window_width = np.random.choice( possible_divisors )
+
+        # just rock with this for now    
+        med_room_w = random.randrange(4, 6)
+        med_room_h = room_h
+        med_window_height = random.randrange( (window_height-1), window_height )
+
+        # just doing this for now.
+        med_window_width = 2
+        med_under_window = under_window
+        med_above_window = med_room_h - med_under_window - med_window_height
+
+        min_room_w = random.randrange(3, 4)
+        match min_room_w:
+            case 3:
+                min_window_width = 1
+            case 4:
+                min_window_width = 2
+
+        min_room_h = med_room_h
+        min_window_height = med_window_height
+        min_under_window = med_under_window
+        min_above_window = min_room_h - min_under_window - min_window_height 
+
+
+    @staticmethod
+    def from_ui():
+        props = bpy.context.scene.KWCProperties
+        params = KWCParams( props.pane_w, props.pane_h)
+        return params
+
+class KWCBuildingParams:
+    # TODO: docstring
+    # this is getting ridiculous.
+    def __init__(self,
+                 maj_room_width,
+                 maj_room_height,
+                 maj_window_width,
+                 maj_window_height,
+                 maj_under_window,
+                 maj_above_window,
+                 maj_around_window,
+
+                 med_room_width,
+                 med_room_height,
+                 med_window_width,
+                 med_window_height,
+                 med_under_window,
+                 med_above_window,
+                 med_around_window,
+
+                 min_room_width,
+                 min_room_height,
+                 min_window_width,
+                 min_window_height,
+                 min_under_window,
+                 min_above_window,
+                 min_around_window):
+
+        self.maj_room_width = maj_room_width
+        self.maj_room_height = maj_room_height
+        self.maj_under_window = maj_under_window
+        self.maj_above_window = maj_above_window
+        self.maj_around_window = maj_around_window
+
+        self.med_room_width = med_room_width
+        self.med_room_height = med_room_height
+        self.med_under_window = med_under_window
+        self.med_above_window = med_above_window
+        self.med_around_window = med_around_window
+
+        self.min_room_width = min_room_width
+        self.min_room_height = min_room_height
+        self.min_under_window = min_under_window
+        self.min_above_window = min_above_window
+        self.min_around_window = min_around_window
+
+# end KWCBuildingParams
 
 class ParamsFootprint:
     # TODO: docstring
