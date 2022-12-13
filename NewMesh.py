@@ -9,6 +9,23 @@ from . import GenLayout
 from . import GenMesh
 from . import NewLayout
 
+class KWCWindows:
+
+    def __init__(self):
+        print('foo')
+            # end __init__
+
+    @staticmethod
+    def from_ui():
+        properties = bpy.context.scene.KWCPropertyGroup
+        params = ParamsWindows(
+            properties.pane_w,
+            properties.pane_h
+            )
+        return params
+    # end from_ui
+# end KWCWindows
+
 class ParamsWindowCage:
     def __init__(self,
                  cage_type: str,
