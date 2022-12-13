@@ -21,6 +21,28 @@
 from bpy.types import Panel, PropertyGroup
 from bpy.props import PointerProperty, FloatProperty, BoolProperty, EnumProperty, IntProperty
 
+# Blender units explanation: 1BU = 1m ..?
+# https://blender.stackexchange.com/questions/49257/blender-python-convert-units-to-imperial
+
+class KWCPropertyGroup(PropertyGroup):
+
+    pane_w : FloatProperty(
+            name="pane unit width",
+            default=0.4572)
+
+    '''
+    def set_pane_h(self, value):
+        self[pane_h] = value
+
+    def get_pane_h(self, value):
+        return self[pane_h]
+    '''
+
+    pane_h : FloatProperty(
+            name="pane unit height",
+            default=0.3556)
+
+
 
 class PBGPropertyGroup(PropertyGroup):
     # TODO: docstring
@@ -594,6 +616,24 @@ class FootprintPropertyGroup( PropertyGroup ):
     bottom: PointerProperty( type=FacePropertyGroup )
 
     # ---
+
+class KWCPanel(Panel):
+    # TODO: docstring
+    bl_label = "KWC - Pane Settings"
+    bl_category = ""
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_context = "objectmode"
+
+    def draw(self, context):
+        layout = self.layout
+        properties = context.scene.KWCPropertyGroup
+
+        col = layout.column(align=True)
+        col.prop(properties, "pane_w")
+        col.prop(properties, "pane_h")
+# end PBGPillarPanel
+
 
    
 class NewFootprintPanel(Panel):

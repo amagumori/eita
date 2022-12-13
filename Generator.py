@@ -35,7 +35,6 @@ import os
 
 import pprint
 
-
 class MyGenerator(bpy.types.Operator):
     bl_idname = "pbg.my_generate_building"
     bl_label = "pepe popo"
@@ -52,6 +51,80 @@ class MyGenerator(bpy.types.Operator):
         params_general = GenLayout.ParamsGeneral.from_ui()
         #params_section = GenUtils.ParamsSectionFactory.horizontal_separator_params_large()
         params_section = GenUtils.ParamsSectionFactory.beppy()
+        print(params_section)
+        params_windows = GenMesh.ParamsWindows.from_ui()
+        params_cage = NewMesh.ParamsWindowCage.from_ui()
+
+        sequence = GenUtils.gen_simple_section_list(params_windows.section_width, params_windows.section_height)
+        m_section = GenUtils.gen_section_mesh(sequence, params_windows.frame_width,
+                                              params_windows.frame_depth)
+        bm_section = bmesh.new()
+        bm_section.from_mesh(m_section)
+        '''
+        mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+        mat_rot = mathutils.Matrix.Rotation(math.radians(-90), 3, "X")
+        vec_trans = (0.0, -params_windows.frame_width, 0.0)
+        bmesh.ops.rotate(bm_section, cent=(0, 0, 0), matrix=mat_rot, verts=bm_section.verts, space=mat_loc)
+        bmesh.ops.translate(bm_section, vec=vec_trans, space=mat_loc, verts=bm_section.verts)
+        bm_section.to_mesh(m_section)
+        '''
+
+        my_window = GenMesh.gen_mesh_windows(context, params_general, params_windows)
+        group.objects.link(my_window)
+        my_window_around = GenMesh.gen_mesh_windows_around(context, params_general, params_windows)
+        my_bar = NewMesh.gen_mesh_window_cage(context, params_cage, params_general)
+
+        # just using these window params as arbitrary values.
+        awning_profile_list = GenUtils.gen_awning_section_list(25, 3, 1, 0.03)
+        awning_profile = GenUtils.gen_plane_profile( awning_profile_list, params_windows.frame_width )
+
+        awning_section = bmesh.new()
+        awning_section.from_mesh(awning_profile)
+
+        m = bpy.data.meshes.new("test")
+        awning_section.to_mesh(m)
+        awning_section.free()
+
+        test_obj = bpy.data.objects.new( "test", m )
+        context.scene.collection.objects.link(test_obj)     
+    
+        '''
+        m = bpy.data.meshes.new("WindowCageBar")
+        my_bar.to_mesh(m)
+        my_bar.free()
+        ob = bpy.data.objects.get("WindowCageBar")
+        if ob is not None:
+            #context.scene.objects.unlink(ob)
+            bpy.data.objects.remove(ob)
+
+        # link the created object to the scene
+        new_obj = bpy.data.objects.new("WindowCageBar", m)
+        context.scene.collection.objects.link(new_obj)
+        '''
+
+        #group.objects.link(my_window)
+        origin = (0,0,0)
+        #apply_positions(my_window, origin, group)
+        return {"FINISHED"}
+    # end invoke
+# end MyGenerator
+
+class KWCGenerator(bpy.types.Operator):
+    bl_idname = "pbg.generate_kowloon"
+    bl_label = "generate kwc building"
+
+    def invoke(self, context, event):
+        group = bpy.data.collections.get("kwc_group")
+        if not group:
+            bpy.ops.collection.create(name="kwc_group")
+            group = bpy.data.collections.get("kwc_group")
+        # delete all objects from group
+        for obj in group.objects:
+            bpy.data.objects.remove(obj)
+        
+        params_kwc = NewLayout.KWCLayoutParams.from_ui()
+        #params_section = GenUtils.ParamsSectionFactory.horizontal_separator_params_large()
+        #params_section = GenUtils.ParamsSectionFactory.beppy()
         print(params_section)
         params_windows = GenMesh.ParamsWindows.from_ui()
         params_cage = NewMesh.ParamsWindowCage.from_ui()
@@ -159,8 +232,6 @@ class FootprintTest(bpy.types.Operator):
         balcony_section = NewMesh.gen_balcony_section()
         #test_list.append( (10,0,0) )
 
-        for i in range( 0, len(balcony_edges) ):
-            print( balcony_edges[i] )
         balcony = NewMesh.gen_balcony(context, balcony_edges, balcony_section, False)
         group.objects.link(balcony)
 

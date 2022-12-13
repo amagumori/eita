@@ -52,6 +52,27 @@ by creating a "zoning" heatmap, we can determine what types of buildings to plac
 
 ## Relationships and dependencies
 
+### footprint
+
+subface width > total window width
+num subfaces < building width / window width (windows per face)
+
+num subfaces should be 1-4 
+
+subface depth either < or > total window width
+  if greater, place windows on minor face
+
+subface spacing factor: 1/4 face width or less 
+
+### floor height
+3-4m
+
+window height: a bit more than 1/3 to around 2/3 of floor height
+  usually around a little more than 1/2 (0.56)
+
+window from floor: 1/3 of floor height, usually 1m
+window above: around 0.75m
+
 
 ### layout settings 
 

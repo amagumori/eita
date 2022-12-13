@@ -62,6 +62,11 @@ from . import UI
 from . import Generator
 
 def register():
+
+    bpy.utils.register_class(UI.KWCPropertyGroup)
+    bpy.utils.register_class(UI.KWCPanel)
+    bpy.types.Scene.KWCPropertyGroup = bpy.props.PointerProperty(type=UI.KWCPropertyGroup)
+
     bpy.utils.register_class(UI.PBGPropertyGroup)
     bpy.types.Scene.PBGPropertyGroup = bpy.props.PointerProperty(type=UI.PBGPropertyGroup)
     #
@@ -100,6 +105,10 @@ def unregister():
     del bpy.types.Scene.PBGPropertyGroup
     del bpy.types.Scene.FootprintPropertyGroup
     del bpy.types.Scene.FacePropertyGroup 
+    del bpy.types.Scene.KWCPropertyGroup
+
+    bpy.utils.unregister_class(UI.KWCPropertyGroup)
+    bpy.utils.unregister_class(UI.KWCPanel)
 
     bpy.utils.unregister_class(UI.PBGPropertyGroup)
     #
