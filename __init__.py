@@ -47,10 +47,12 @@ if "MyGenerator" in locals():
     importlib.reload(MyGenerator)
 if "GenMesh" in locals():
     importlib.reload(GenMesh)
-if "NewMesh" in locals():
-    importlib.reload(NewMesh)
+
 if "NewLayout" in locals():
     importlib.reload(NewLayout)
+if "NewMesh" in locals():
+    importlib.reload(NewMesh)
+
 if "GenLayout" in locals():
     importlib.reload(GenLayout)
 if "GenUtils" in locals():
@@ -64,6 +66,9 @@ from . import Generator
 def register():
 
     bpy.utils.register_class(UI.KWCPropertyGroup)
+
+    bpy.utils.register_class( Generator.KWCGenerator )
+
     bpy.utils.register_class(UI.KWCPanel)
     bpy.types.Scene.KWCPropertyGroup = bpy.props.PointerProperty(type=UI.KWCPropertyGroup)
 

@@ -24,11 +24,11 @@ import math
 import bpy
 from . import GenLayout
 from . import GenMesh
+
+from . import NewLayout
 from . import NewMesh
 from . import Utils
 from . import GenUtils
-
-from . import NewLayout
 
 import numpy
 import time
@@ -36,26 +36,37 @@ import os
 
 import pprint
 
-'''
+
 class KWCGenerator( bpy.types.Operator):
-    bl_idname = "kwc_generator"
+    bl_idname = "kwc.generator"
     bl_label = "KWC generator"
 
     def invoke( self, context, event):
         group = bpy.data.collections.get("kwc_group")
-            if not group:
-                bpy.ops.collection.create(name="kwc_group")
-                group = bpy.data.collections.get("kwc_group")
-            # delete all objects from group
+        if not group:
+            bpy.ops.collection.create(name="kwc_group")
+            group = bpy.data.collections.get("kwc_group")
+        # delete all objects from group
+        if group.objects:
             for obj in group.objects:
                 bpy.data.objects.remove(obj)
 
-        kwc_params = NewLayout.ParamsGeneral.from_ui()
+        kwc_params = NewLayout.KWCParams.from_ui()
         kwc_building_params = kwc_params.generate_building_params()
 
         footprint = NewLayout.kwc_gen_footprint( kwc_building_params )
 
-'''
+        wall_section_list = GenUtils.gen_simple_section_list( 0.5, 0.5 )
+        wall_section_mesh = GenUtils.gen_section_mesh(wall_section_list, 0.5, 0.5 )
+        
+        #obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())
+        my_wall = NewMesh.gen_wall( context, footprint, wall_section_mesh.copy() )
+
+        group.objects.link(my_wall)
+
+        return { "FINISHED" }
+
+
 
 class MyGenerator(bpy.types.Operator):
     bl_idname = "pbg.my_generate_building"
@@ -131,6 +142,7 @@ class MyGenerator(bpy.types.Operator):
     # end invoke
 # end MyGenerator
 
+"""
 class KWCGenerator(bpy.types.Operator):
     bl_idname = "pbg.generate_kowloon"
     bl_label = "generate kwc building"
@@ -204,6 +216,8 @@ class KWCGenerator(bpy.types.Operator):
         return {"FINISHED"}
     # end invoke
 # end MyGenerator
+"""
+
 
 class FootprintTest(bpy.types.Operator):
     bl_idname = "pbg.test_footprint"

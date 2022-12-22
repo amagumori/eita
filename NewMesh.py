@@ -7,6 +7,7 @@ from . import Utils
 from . import GenUtils
 from . import GenLayout
 from . import GenMesh
+
 from . import NewLayout
 
 class KWCWindows:
@@ -90,9 +91,10 @@ class ParamsWindowCage:
 #   vert pairs : maj / med / min enum
 
 def kwc_gen_mesh_windows_maj(context: bpy.types.Context, 
-                             kwc_params: KWCParams, 
-                             kwc_building_params: KWCBuildingParams, 
-                             kwc_window_params: KWCWindowParams ):
+                             kwc_params: NewLayout.KWCParams,
+                             kwc_building_params: NewLayout.KWCBuildingParams ):
+                             
+                             #kwc_window_params: KWCWindowParams ):
 
     pane_w = kwc_params.pane_w
     pane_h = kwc_params.pane_h
@@ -145,7 +147,7 @@ def kwc_gen_mesh_windows_maj(context: bpy.types.Context,
 
         print('layout: ', layout)
 
-        verts_grid_glass.append((layout[0][0] - ,
+        verts_grid_glass.append((layout[0][0] - window_width,
                                  layout[0][1] + window_width, 0.0))
         verts_grid_glass.append((layout[1][0] + window_width,
                                  layout[1][1] + window_width, 0.0))
@@ -309,7 +311,23 @@ def kwc_gen_mesh_windows_maj(context: bpy.types.Context,
     context.scene.collection.objects.link(new_obj)
     return new_obj
 # end gen_mesh_windows
-'''
+
+def gen_wall( context: bpy.types.Context,
+              footprint: list,
+              section_mesh: bpy.types.Mesh ) -> bpy.types.Object:
+    
+    bm = bmesh.new()
+    mesh = Utils.extrude_along_edges( section_mesh.copy(), footprint, False )
+    bm.from_mesh(mesh)
+
+    m = bpy.data.meshes.new( "footprintExtrusionTest" )
+    bm.to_mesh(m)
+    bm.free()
+
+    obj = bpy.data.objects.new("footprintTest", m)
+    context.collection.objects.link(obj)
+    return obj
+
 
 def gen_mesh_window_cage( context: bpy.types.Context,
                           params_cage: ParamsWindowCage,
@@ -672,6 +690,7 @@ def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayo
             -0.5* params.window_width,
             #0.0,
             0.0 ))
+
         '''
         first_vert = ((
             loc[0][0] + 0.5 * params.window_width,

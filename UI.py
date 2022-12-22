@@ -22,6 +22,14 @@ from bpy.types import Panel, PropertyGroup
 from bpy.props import PointerProperty, FloatProperty, BoolProperty, EnumProperty, IntProperty
 
 class KWCPropertyGroup(PropertyGroup):
+
+    width: FloatProperty(
+            name="building width",
+            default=9.144)    # 30 ft in blender units
+    depth: FloatProperty(
+            name="building depth",
+            default=18.288)   # 60 ft in blender units
+
     pane_w: FloatProperty(
             name="pane unit width",
             default=0.6096)  # 24 in
@@ -640,6 +648,12 @@ class KWCPanel(Panel):
         col = layout.column(align=True)
         col.prop(properties, "pane_w")
         col.prop(properties, "pane_h")
+        col.prop(properties, "width")
+        col.prop(properties, "depth")
+       
+        row = layout.row(align=True)
+        row.operator("kwc.generator", text="KWC generator")
+
 # end PBGPillarPanel
 
 
