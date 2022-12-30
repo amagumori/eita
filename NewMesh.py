@@ -312,12 +312,86 @@ def kwc_gen_mesh_windows_maj(context: bpy.types.Context,
     return new_obj
 # end gen_mesh_windows
 
-def gen_wall( context: bpy.types.Context,
+def gen_wall( context: bpy.types.Context, wall_loops: list, section_mesh = bpy.types.Mesh ) -> bpy.types.Object:
+    bm = bmesh.new()
+    for loop in wall_loops:
+        print('lup: ', loop)
+        
+        mesh = Utils.extrude_along_edges( section_mesh.copy(), loop, True )
+        bm.from_mesh(mesh)
+
+    obj = bpy.data.objects.get("KWCWalls")
+    if obj is not None:
+        #context.scene.objects.unlink(obj)
+        bpy.data.objects.remove(obj)
+    # end if
+
+    m = bpy.data.meshes.new("KWCWall")
+    bm.to_mesh(m)
+    bm.free()
+
+    # link the created object to the scene
+    obj = bpy.data.objects.new("KWCWalls", m)
+    context.scene.collection.objects.link(obj)
+    return obj
+
+
+def gen_wall_offset( context: bpy.types.Context,
               footprint: list,
               section_mesh: bpy.types.Mesh ) -> bpy.types.Object:
-    
+
+    # test params
+    offset_size = 0.1
+
+    # how high is first floor from the ground
+    first_floor_offset = 0.6
+   
+    # a "moat" of geometry around the footprint on 1st floor
+    first_floor_moat = 0.2
+
+    section_height = 1.5
+
+    # generate wall section mesh
+    wall_section = GenUtils.gen_wall_section_flat( section_height )
     bm = bmesh.new()
-    mesh = Utils.extrude_along_edges( section_mesh.copy(), footprint, False )
+    bm.from_mesh(wall_section)
+
+    # offset it on y axis
+    vec_trans = mathutils.Vector((0.0, offset_size, 0.0))
+    mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+    bmesh.ops.translate(bm, vec=vec_trans, verts=bm.verts, space=mat_loc)
+
+    # append the top edge
+    verts = list()
+    edges = list()
+    verts.append((0.0, 0.0, first_floor_offset))
+    verts.append((0.0, first_floor_moat, first_floor_offset))
+    edges.append((0, 1))
+    m_edge = bpy.data.meshes.new("PBGWallOffsetEdge")
+    m_edge.from_pydata(verts, edges, [])
+    bm.from_mesh(m_edge)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0001)
+    # convert to mesh, extrude along
+    m = bpy.data.meshes.new("PbgWallOffset")
+    bm.to_mesh(m)
+    bm.free()
+    m_extruded = Utils.extrude_along_edges(m, footprint, True)
+
+    # check if the object for walls already exists
+    obj = bpy.data.objects.get("PBGOffset")
+    if obj is not None:
+        #context.scene.objects.unlink(obj)
+        bpy.data.objects.remove(obj)
+    # end if
+
+    # link the created object to the scene
+    obj = bpy.data.objects.new("PBGOffset", m_extruded)
+    context.scene.collection.objects.link(obj)
+    return obj
+# end gen_mesh_offset_wall
+  
+    bm = bmesh.new()
+    mesh = Utils.extrude_along_edges( wall_section.copy(), footprint, False )
     bm.from_mesh(mesh)
 
     m = bpy.data.meshes.new( "footprintExtrusionTest" )
@@ -327,6 +401,238 @@ def gen_wall( context: bpy.types.Context,
     obj = bpy.data.objects.new("footprintTest", m)
     context.collection.objects.link(obj)
     return obj
+
+def gen_windows(context: bpy.types.Context, 
+                params_general: GenLayout.ParamsGeneral,
+                params_windows: ParamsWindows,
+                general_params: KWCParams,
+                building_params: KWCBuildingParams ):
+                # later, kwc window params ):
+    # keep windows and frame in separate bmesh?
+
+    bm = bmesh.new()
+
+    # default values from eita
+    # breaking out parameters here for now
+    grid = True
+    section_width = 0.10
+    section_height = 0.15
+    frame_depth = 0.03
+    window_count = 3
+    grill_width = 0.03  # "window frame width"
+    window_inset = 0.25 # "window around inner depth" bruh what the fuck type of name is that.  come on
+
+    pane_w = general_params.pane_w
+    pane_h = general_params.pane_h
+
+    width = building_params.window_width * general_params.pane_w
+    height = building_params.window_height * general_params.pane_h
+
+    '''
+    frame_width = params_general.window_width - 2*params_windows.pillar_width
+    frame_height = params_general.window_height - 2*params_windows.section_height
+    frame_window_width = frame_width / params_windows.window_count
+    '''
+
+    # create section
+    params = GenUtils.ParamsSectionFactory.horizontal_separator_params_large()
+    if params_windows.simple_section == True:
+        sequence = GenUtils.gen_simple_section_list( section_width, section_height )
+    else:
+        sequence = GenUtils.gen_section_element_list(params)
+    m_section = GenUtils.gen_section_mesh(sequence, width, frame_depth)
+
+    bm_section = bmesh.new()
+    bm_section.from_mesh(m_section)
+    mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+    mat_rot = mathutils.Matrix.Rotation(math.radians(-90), 3, "X")
+    vec_trans = (0.0, -grill_width, 0.0)
+    bmesh.ops.rotate(bm_section, cent=(0, 0, 0), matrix=mat_rot, verts=bm_section.verts, space=mat_loc)
+    bmesh.ops.translate(bm_section, vec=vec_trans, space=mat_loc, verts=bm_section.verts)
+    bm_section.to_mesh(m_section)
+    bm_section.free()
+
+    # generate single layout for top and bottom, check for splits here
+    layout_top = list()
+    layout_bottom = list()
+    m_bottom_glass = bpy.data.meshes.new("KWCWindowBottomGlass")
+    m_top_glass = bpy.data.meshes.new("KWCWindowTopGlass")
+    verts_bottom_glass = list()
+    verts_top_glass = list()
+    #
+
+    if grid == True:
+
+        layout = list()
+        m_grid_glass = bpy.data.meshes.new("WindowGridGlass")
+        verts_grid_glass = list()
+
+        print('hit')
+        #frame_window_height = height / window_count
+        
+        layout.append( (0.5*width, 0, 0 ) ) 
+        layout.append( (0.5*width - pane_w, 0, 0 ) ) 
+        layout.append( (0.5*width - pane_w, pane_h, 0 ) )
+        layout.append( (0.5*width , height, 0 ) )
+
+        print('layout: ', layout)
+
+        verts_grid_glass.append((layout[0][0] - grill_width,    # hank hill moment
+                                 layout[0][1] + grill_width, 0.0))
+        verts_grid_glass.append((layout[1][0] + grill_width,
+                                 layout[1][1] + grill_width, 0.0))
+        verts_grid_glass.append((layout[2][0] + grill_width,
+                                 layout[2][1] - grill_width, 0.0))
+        verts_grid_glass.append((layout[3][0] - grill_width,
+                                 layout[2][1] - grill_width, 0.0))
+
+        print(verts_grid_glass)
+
+        m_grid_glass.from_pydata( verts_grid_glass, [(0,1), (1,2), (2,3), (3,0)], [(0, 1, 2, 3)])
+        m_grid = Utils.extrude_along_edges(m_section.copy(), layout, True)
+
+        bm.from_mesh(m_grid_glass)
+        for face in bm.faces:
+            face.material_index = 1
+        bm.from_mesh(m_grid)
+
+        '''
+        duplicating and moving all the panes here.
+        '''
+        geom_orig = bm.verts[:] + bm.edges[:] + bm.faces[:]
+        for i in range(1, params_windows.window_count):
+            ret_dup = bmesh.ops.duplicate(bm, geom=geom_orig)
+            verts_to_translate_x = [ele for ele in ret_dup["geom"] if isinstance(ele, bmesh.types.BMVert)]
+            mat_loc = mathutils.Matrix.Translation((0.0,0.0,0.0))
+            vec_width_trans = ( -pane_w*i, 0, 0)
+            bmesh.ops.translate(bm, vec=vec_width_trans, verts=verts_to_translate_x, space=mat_loc)
+        # lol bumbo coder moment
+        geom_orig = bm.verts[:] + bm.edges[:] + bm.faces[:]
+        for i in range(1, params_windows.window_count):
+            dup = bmesh.ops.duplicate(bm, geom=geom_orig)
+            verts = [ele for ele in dup["geom"] if isinstance(ele, bmesh.types.BMVert)]
+            mat_loc = mathutils.Matrix.Translation((0.0,0.0,0.0))
+            vec_height_trans = ( 0, pane_h*i, 0 )
+            bmesh.ops.translate(bm, vec=vec_height_trans, verts=verts, space=mat_loc)
+
+        mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+
+        # --------------------------------------------------------------
+        # CONTINUE REWRITING FROM HERE
+
+        vec_trans = (0.0, -window_inset, params_general.window_offset + params_windows.section_height)
+        mat_rot = mathutils.Matrix.Rotation(math.radians(90), 3, "X")
+        bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=mat_rot, verts=bm.verts, space=mat_loc)
+        bmesh.ops.translate(bm, vec=vec_trans, space=mat_loc, verts=bm.verts)
+
+        # create object
+        m = bpy.data.meshes.new("BemppWindow")
+        bm.to_mesh(m)
+        bm.free()
+        ob = bpy.data.objects.get("BemppWindow")
+        if ob is not None:
+            #context.scene.objects.unlink(ob)
+            bpy.data.objects.remove(ob)
+
+        # link the created object to the scene
+        new_obj = bpy.data.objects.new("beppyWindow", m)
+        context.scene.collection.objects.link(new_obj)
+        return new_obj
+
+
+    if params_windows.split_top == True:
+        layout_top.append((0.5 * frame_width, frame_height*params_windows.window_ratio, 0))
+        layout_top.append((0.5 * frame_width - frame_window_width, frame_height*params_windows.window_ratio, 0))
+        layout_top.append((0.5 * frame_width - frame_window_width, frame_height, 0))
+        layout_top.append((0.5 * frame_width, frame_height, 0))
+    else:
+        layout_top.append((0.5 * frame_width, frame_height * params_windows.window_ratio, 0))
+        layout_top.append((-0.5 * frame_width, frame_height * params_windows.window_ratio, 0))
+        layout_top.append((-0.5 * frame_width, frame_height, 0))
+        layout_top.append((0.5 * frame_width, frame_height, 0))
+
+    layout_bottom.append((0.5*frame_width, 0, 0))
+    layout_bottom.append((0.5*frame_width - frame_window_width, 0, 0))
+    layout_bottom.append((0.5*frame_width - frame_window_width, frame_height*params_windows.window_ratio, 0))
+    layout_bottom.append((0.5*frame_width, frame_height*params_windows.window_ratio, 0))
+
+    # create glass
+    verts_top_glass.append((layout_top[0][0] - params_windows.frame_width,
+                            layout_top[0][1] + params_windows.frame_width, 0.0))
+    verts_top_glass.append((layout_top[1][0] + params_windows.frame_width,
+                            layout_top[1][1] + params_windows.frame_width, 0.0))
+    verts_top_glass.append((layout_top[2][0] + params_windows.frame_width,
+                            layout_top[2][1] - params_windows.frame_width, 0.0))
+    verts_top_glass.append((layout_top[3][0] - params_windows.frame_width,
+                            layout_top[2][1] - params_windows.frame_width, 0.0))
+
+    verts_bottom_glass.append((layout_bottom[0][0] - params_windows.frame_width,
+                               layout_bottom[0][1] + params_windows.frame_width, 0.0))
+    verts_bottom_glass.append((layout_bottom[1][0] + params_windows.frame_width,
+                               layout_bottom[1][1] + params_windows.frame_width, 0.0))
+    verts_bottom_glass.append((layout_bottom[2][0] + params_windows.frame_width,
+                               layout_bottom[2][1] - params_windows.frame_width, 0.0))
+    verts_bottom_glass.append((layout_bottom[3][0] - params_windows.frame_width,
+                               layout_bottom[2][1] - params_windows.frame_width, 0.0))
+
+    m_top_glass.from_pydata(verts_top_glass, [(0, 1), (1, 2), (2, 3), (3, 0)], [(0, 1, 2, 3)])
+    m_bottom_glass.from_pydata(verts_bottom_glass, [(0, 1), (1, 2), (2, 3), (3, 0)], [(0, 1, 2, 3)])
+
+    # extrude along layouts
+    m_bottom = Utils.extrude_along_edges(m_section.copy(), layout_bottom, True)
+    m_top = Utils.extrude_along_edges(m_section, layout_top, True)
+
+    bm.from_mesh(m_bottom_glass)
+    for face in bm.faces:
+        face.material_index = 1
+    bm.from_mesh(m_bottom)
+
+    if params_windows.split_top == True:
+        faces_to_exclude = bm.faces[:]
+        bm.from_mesh(m_top_glass)
+        for face in bm.faces:
+            if face not in faces_to_exclude:
+                face.material_index = 1
+        bm.from_mesh(m_top)
+
+    # duplicate and translate frames
+    geom_orig = bm.verts[:] + bm.edges[:] + bm.faces[:]
+    for i in range(1, params_windows.window_count):
+        ret_dup = bmesh.ops.duplicate(bm, geom=geom_orig)
+        verts_to_translate = [ele for ele in ret_dup["geom"] if isinstance(ele, bmesh.types.BMVert)]
+        mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+        vec_trans = (-frame_window_width*i, 0, 0)
+        bmesh.ops.translate(bm, vec=vec_trans, verts=verts_to_translate, space=mat_loc)
+
+    if params_windows.split_top == False:
+        faces_to_exclude = bm.faces[:]
+        bm.from_mesh(m_top_glass)
+        for face in bm.faces:
+            if face not in faces_to_exclude:
+                face.material_index = 1
+        bm.from_mesh(m_top)
+
+    # rotate window, move on z
+    mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
+    vec_trans = (0.0, -params_windows.inner_depth, params_general.window_offset + params_windows.section_height)
+    mat_rot = mathutils.Matrix.Rotation(math.radians(90), 3, "X")
+    bmesh.ops.rotate(bm, cent=(0, 0, 0), matrix=mat_rot, verts=bm.verts, space=mat_loc)
+    bmesh.ops.translate(bm, vec=vec_trans, space=mat_loc, verts=bm.verts)
+
+    # create object
+    m = bpy.data.meshes.new("PBGWindow")
+    bm.to_mesh(m)
+    bm.free()
+    ob = bpy.data.objects.get("PBGWindow")
+    if ob is not None:
+        #context.scene.objects.unlink(ob)
+        bpy.data.objects.remove(ob)
+
+    # link the created object to the scene
+    new_obj = bpy.data.objects.new("PBGWindow", m)
+    context.scene.collection.objects.link(new_obj)
+    return new_obj
+# end gen_mesh_windows
 
 
 def gen_mesh_window_cage( context: bpy.types.Context,

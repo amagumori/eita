@@ -325,26 +325,340 @@ class ParamsFootprintFace:
         )
         return params
 
-def kwc_gen_footprint( params: KWCBuildingParams ) -> list:
+def kwc_gen_footprint( general_params: KWCParams, params: KWCBuildingParams ) -> list:
+
+    # in building_params, give a layout type - major faces with inset med faces in between, etc.
+    # eventually return a dict with face type for each vert pair
 
     footprint = list()
 
     # max 4:1 width depth ratio
     max_depth_ratio = 4
 
-    width = params.building_width
-    depth = params.building_depth
+    room_w = params.room_width * general_params.pane_w
+    room_h = params.room_height * general_params.pane_h
+
+    width = room_w * params.building_width
+    depth = room_w * params.building_depth
 
     #depth = random.randint( params.building_width, ( params.building_width * max_depth_ratio ) ) 
 
-    footprint.append( (-0.5 * params.building_width, -0.5 * params.building_depth, 0 ))
-    footprint.append( (-0.5 * params.building_width, 0.5 * params.building_depth, 0 ))
-    footprint.append( (0.5 * params.building_width, 0.5 * params.building_depth, 0 ))
-    footprint.append( (0.5 * params.building_width, -0.5 * params.building_depth, 0 ))
+    footprint.append( (-0.5 * width, -0.5 * depth, 0 ))
+    footprint.append( (-0.5 * width, 0.5 * depth, 0 ))
+    footprint.append( (0.5 * width, 0.5 * depth, 0 ))
+    footprint.append( (0.5 * width, -0.5 * depth, 0 ))
 
     return footprint
 
+def kwc_layout( general_params: KWCParams, kwc_params: KWCBuildingParams, footprint: list, door_position: tuple) -> dict:
 
+    building_width = general_params.building_width * general_params.room_w
+    building_depth = general_params.building_depth * general_params.room_w
+
+    floor_count = 8
+    floor_height = 3
+    wall_loops = list()
+    for i in range(0, floor_count):
+        floor_print = footprint.copy()
+        for j in range(0, len(floor_print) ):
+            floor_print[j] = ( (footprint[j][0], footprint[j][1], floor_height * i ) )
+        wall_loops.append(floor_print)
+
+    for i in range(0, len(footprint) - 1 ):
+
+        vert_start = footprint[i]
+        if i == len(footprint) - 1:
+            vert_end = footprint[0]
+        else:
+            vert_end = footprint[i+1]
+
+        length_x = vert_end[0] - vert_start[0]
+        length_y = vert_end[1] - vert_start[1]
+        length = math.sqrt(length_x * length_x + length_y * length_y)
+
+        # try this
+        ww_dist_x = ( room_w / length ) * length_x
+        ww_dist_y = ( room_w / length ) * length_y
+
+        if math.isclose( length, building_width ):
+            room_count = general_params.building_width
+
+            for j in range(0, room_count):
+                offset = ( j * room_w ) - (0.5 * room_w)
+                window_pos = ( ( vert_start[0] + ((length_x - ( room_count-1) * ww_dist_x ) / 2 ) + j*ww_dist_x),
+                              ( vert_start[1] + ((length_y - ( room_count-1) * ww_dist_y ) / 2 ) + j*ww_dist_y),
+                              0)
+                window_positions.append(window_pos)
+
+        elif math.isclose( length, building_depth ):
+            room_count = general_params.building_depth
+
+            for j in range(0, room_count):
+                offset = ( j * room_w ) - (0.5 * room_w)
+                window_pos = ( ( vert_start[0] + ((length_x - ( room_count-1) * ww_dist_x ) / 2 ) + j*ww_dist_x),
+                              ( vert_start[1] + ((length_y - ( room_count-1) * ww_dist_y ) / 2 ) + j*ww_dist_y),
+                              0)
+                window_positions.append(window_pos)
+
+        else:
+            print('poo poo pee pee')
+
+
+    result = {
+        "window_positions": window_positions,
+        #"pillar_positions": pillar_positions,
+        "wall_loops": wall_loops
+    }
+    return result
+
+
+# eliminate paramsgeneral for now, build out later
+def kwc_gen_layout( general_params: KWCParams, kwc_params: KWCBuildingParams, footprint: list, door_position: tuple) -> dict:
+    """
+    Generates the layout of windows, pillars and walls
+    Args:
+        params_general: Instance of ParamsGeneral class
+        footprint: list(tuple(x,y,z)) - list of tuples where each tuple is an xyz coordinate of the footprint
+        door_position: tuple(tuple(x,y,z), rot) - tuple, where first element is the xyz coordinate of the door position,
+            and second element is the door rotation on Z axis.
+    Returns:
+        a dictionary with the following keys
+            "window_positions" - list(tuple(tuple(x,y,z), rot)) list of tuples, where each item contains the x,y,z
+                position of the window and it's rotation on the z axis.
+            wall_loops - list(list(tuple(x,y,z)) - list, containing a list of verts, ie loops to be used for extruding
+                walls
+    """
+
+    room_w = general_params.pane_w * kwc_params.room_width
+    room_h = general_params.pane_h * kwc_params.room_height
+
+    print('roomw: ', room_w)
+    print('roomh: ', room_h)
+
+    TEST_door_width = 0.5
+    TEST_door_height = 1
+
+    TEST_floor_offset = 0.0
+    TEST_floor_height = 3.0
+    TEST_floor_count = 8
+
+    window_positions = list()
+    wall_loops = list()
+    wall_verts = list()
+    wall_verts_initial = list()
+    is_first_loop = True
+
+    for i in range(0, len(footprint)):
+        # assign start and end vertex
+        vert_start = footprint[i]
+        if i == len(footprint) - 1:
+            vert_end = footprint[0]
+        else:
+            vert_end = footprint[i+1]
+        # end if
+
+        # push the first vert into the array
+        if is_first_loop:
+            wall_verts_initial.append((vert_start[0], vert_start[1], TEST_floor_offset))
+        else:
+            wall_verts.append((vert_start[0], vert_start[1], TEST_floor_offset))
+        # end if;
+
+        # calculate length of edge
+        length_x = vert_end[0] - vert_start[0]
+        length_y = vert_end[1] - vert_start[1]
+        length = math.sqrt(length_x * length_x + length_y * length_y)
+
+        print('length x:', length_x)
+        print('length y:', length_y)
+        print('LENGTH', length)
+
+        # integer divide by "window unit" width (floor)
+        window_count = math.floor( length / room_w )
+        window_width_x = (room_w / length) * length_x
+        window_width_y = (room_w / length) * length_y
+
+        print("window count: ", window_count )
+        print("window width x: ", window_width_x)
+        print("window width y: ", window_width_y)
+
+        # window-to-window distances are irrelevant in this method?
+        ww_dist_x = room_w
+        ww_dist_y = room_w 
+
+        # sanity check here
+        if window_count < 0:
+            window_count = 0
+
+        # calculate distance between windows on x and y axis
+        """
+        ww_dist_x = (params_general.distance_window_window / length) * length_x
+        ww_dist_y = (params_general.distance_window_window / length) * length_y
+        window_width_x = (params_general.window_width / length) * length_x
+        window_width_y = (params_general.window_width / length) * length_y
+
+        # calculate distance from window to pillar on x and y axis
+        wp_dist_x = (params_general.distance_window_pillar / length) * length_x
+        wp_dist_y = (params_general.distance_window_pillar / length) * length_y
+
+        # check whether to generate one or two pillars between windows
+        if 2 * params_general.distance_window_pillar >= params_general.distance_window_window:
+            has_single_pillar = True
+        else:
+            has_single_pillar = False
+        # end if
+
+        """
+
+        # calculate window and pillar rotation (it's always the same)
+        vec_edge = Utils.vec_from_verts(vert_end, vert_start)
+        vec_0 = mathutils.Vector((0.0, 1.0, 0.0))
+        rot = vec_edge.xy.angle_signed(vec_0.xy) - 0.5 * math.pi
+
+        # calculate door range for calculating intersects
+        door_size_x = math.cos(door_position[1])*TEST_door_width
+        door_size_y = math.sin(door_position[1])*TEST_door_width
+        door_start = (door_position[0][0]-0.5*door_size_x,
+                      door_position[0][1]-0.5*door_size_y,
+                      TEST_floor_offset)
+        door_end = (door_position[0][0]+0.5*door_size_x,
+                    door_position[0][1]+0.5*door_size_y,
+                    TEST_floor_offset)
+
+        
+        # @FIXME  !!
+        for j in range(0, int(window_count)):
+            # calculate window position
+            window_pos = ((vert_start[0] + ((length_x - (window_count - 1) * ww_dist_x) / 2) + j * ww_dist_x),
+                          (vert_start[1] + ((length_y - (window_count - 1) * ww_dist_y) / 2) + j * ww_dist_y),
+                          TEST_floor_offset
+                          )
+
+            # check whether the window intersects with the door, push first floor accordingly
+            vert_1 = (window_pos[0] - 0.5 * window_width_x, window_pos[1] - 0.5 * window_width_y, 0)
+            vert_2 = (window_pos[0] + 0.5 * window_width_x, window_pos[1] - 0.5 * window_width_y, 0)
+
+            window_loop = list()
+            window_positions.append( (window_pos, rot) )
+
+            
+            if not (Utils.vert_check_intersect(vert_1, door_start, door_end) or
+                    Utils.vert_check_intersect(vert_2, door_start, door_end) or
+                    Utils.vert_check_intersect(window_pos, door_start, door_end)):
+                window_positions.append((window_pos, rot))
+            else:
+                # windows intersected with the door and was not pushed
+                if(Utils.vert_check_intersect(vert_1, door_start, door_end) and
+                        (not Utils.vert_check_intersect(vert_2, door_start, door_end))):
+                    window_loop = list()
+                    window_loop.append(door_end)
+                    window_loop.append((vert_2[0], vert_2[1], TEST_floor_offset))
+                    wall_loops.append(window_loop)
+                elif(Utils.vert_check_intersect(vert_2, door_start, door_end) and
+                     (not Utils.vert_check_intersect(vert_1, door_start, door_end))):
+                    window_loop = list()
+                    window_loop.append((vert_1[0], vert_1[1], TEST_floor_offset))
+                    window_loop.append(door_start)
+                    wall_loops.append(window_loop)
+                elif(Utils.vert_check_intersect(window_pos, door_start, door_end) and
+                     (not Utils.vert_check_intersect(vert_1, door_start, door_end)) and
+                     (not Utils.vert_check_intersect(vert_1, door_start, door_end))):
+                    window_loop = list()
+                    window_loop.append((vert_1[0], vert_1[1], TEST_floor_offset))
+                    window_loop.append(door_start)
+                    wall_loops.append(window_loop)
+                    window_loop = list()
+                    window_loop.append(door_end)
+                    window_loop.append((vert_2[0], vert_2[1], TEST_floor_offset))
+                    wall_loops.append(window_loop)
+            # end if
+            
+
+            # push all other floors
+            for floor in range(1, TEST_floor_count + 1):
+                pos = (window_pos[0], window_pos[1], TEST_floor_offset + floor * TEST_floor_height)
+                window_positions.append((pos, rot))
+            # end for
+
+            # calculate the last vert of this loop, because it is broken by the window
+            vert_wall = (window_pos[0] - 0.5 * window_width_x,
+                         window_pos[1] - 0.5 * window_width_y,
+                         TEST_floor_offset)
+            # push it into the loops array
+            if is_first_loop:
+                wall_verts_initial.append(vert_wall)
+                is_first_loop = False
+            else:
+                wall_verts.append(vert_wall)
+                # make a copy of wall verts, implement check and modification for first floor
+                loop = list()
+                for vert in wall_verts:
+                    if not Utils.vert_check_intersect(vert, door_start, door_end):
+                        loop.append(vert)
+                if len(wall_verts) == len(loop):
+                    wall_loops.append(loop)
+                elif Utils.vert_check_intersect(wall_verts[len(wall_verts)-1], door_start, door_end) and len(loop):
+                    loop.append(door_start)
+                    wall_loops.append(loop)
+                elif Utils.vert_check_intersect(wall_verts[0], door_start, door_end) and len(loop):
+                    loop.insert(0, door_end)
+                    wall_loops.append(loop)
+
+                # make a copy of wall_verts for each floor, push for each floor except ground
+                for floor in range(1, TEST_floor_count + 1):
+                    loop = list()
+                    for vert in wall_verts:
+                        loop.append((vert[0], vert[1], TEST_floor_offset + floor*TEST_floor_height))
+                    wall_loops.append(loop)
+                wall_verts.clear()
+            # end if
+
+            # calculate the first vert of the next loop and push it into the loops array
+            vert_wall = (window_pos[0] + 0.5 * window_width_x,
+                         window_pos[1] + 0.5 * window_width_y,
+                         TEST_floor_offset)
+            wall_verts.append(vert_wall)
+        # end while
+
+        # check if this is the last edge, append the layout_verts_initial to the current layout_verts
+        if i == len(footprint) - 1:
+            verts = wall_verts + wall_verts_initial
+
+            # make a copy of wall verts, implement check and modification for first floor
+            loop = list()
+            for vert in verts:
+                if not Utils.vert_check_intersect(vert, door_start, door_end):
+                    loop.append(vert)
+            if len(verts) == len(loop):
+                wall_loops.append(loop)
+            elif Utils.vert_check_intersect(verts[len(wall_verts) - 1], door_start, door_end) and len(loop):
+                loop.append(door_start)
+                wall_loops.append(loop)
+            elif Utils.vert_check_intersect(verts[0], door_start, door_end) and len(loop):
+                loop.insert(0, door_end)
+                wall_loops.append(loop)
+
+            '''
+            # make a copy of wall_verts for each floor, push for each floor except ground
+            for floor in range(1, TEST_floor_count + 1):
+                loop = list()
+                for vert in verts:
+                    loop.append((vert[0], vert[1], TEST_floor_offset + floor * TEST_floor_height))
+                wall_loops.append(loop)
+            wall_verts.clear()
+            '''
+        # end if
+    # end for
+
+    # put all results in a dictionary and return it
+    result = {
+        "window_positions": window_positions,
+        "wall_loops": wall_loops
+    }
+    return result
+#
+
+"""
 # we will maybe want in the future gen nonstandard footprint
 # can build more complicated arbitrary-poly footprints, etc.
 
@@ -353,8 +667,6 @@ def kwc_gen_footprint( params: KWCBuildingParams ) -> list:
 
 #def build_footprint( params_footprint: ParamsFootprint ) -> list:
 
-
-"""
 minor, med, and major faces
 
 FOOTPRINT SCHEMA

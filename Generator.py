@@ -54,16 +54,47 @@ class KWCGenerator( bpy.types.Operator):
         kwc_params = NewLayout.KWCParams.from_ui()
         kwc_building_params = kwc_params.generate_building_params()
 
-        footprint = NewLayout.kwc_gen_footprint( kwc_building_params )
+        pp = pprint.PrettyPrinter( indent=4 )
+        pp.pprint( vars( kwc_building_params ) )
 
-        wall_section_list = GenUtils.gen_simple_section_list( 0.5, 0.5 )
-        wall_section_mesh = GenUtils.gen_section_mesh(wall_section_list, 0.5, 0.5 )
+
+        footprint = NewLayout.kwc_gen_footprint( kwc_params, kwc_building_params )
+         
+        print('print: ', footprint )
+
+        # this should all happen AOT
+        bldg_depth = kwc_building_params.building_depth * ( kwc_building_params.room_width * kwc_params.pane_w )        
+        # whatever
+        door_position = ((0.0, 0.5*bldg_depth, 0.0), 0)
         
-        #obj_wall = GenMesh.gen_mesh_wall(context, layout["wall_loops"], wall_section_mesh.copy())
-        my_wall = NewMesh.gen_wall( context, footprint, wall_section_mesh.copy() )
+        """
+        floor_count = 8
+        floor_height = 3
+        wall_loops = list()
+        for i in range(0, floor_count):
+            floor_print = footprint.copy()
+            for j in range(0, len(floor_print) ):
+                floor_print[j] = ( (footprint[j][0], footprint[j][1], floor_height * i ) )
+            wall_loops.append(floor_print)
+        """
 
-        group.objects.link(my_wall)
+        layout = NewLayout.kwc_gen_layout( kwc_params, kwc_building_params, footprint, door_position )
 
+        # just hardcoding floor height in here, stupid
+        wall_section_mesh = GenUtils.gen_wall_section_flat(floor_height)
+
+        
+        #balcony_section = NewMesh.gen_balcony_section()
+        #balcony = NewMesh.gen_balcony( context, footprint, balcony_section, True )
+        #group.objects.link(balcony)
+
+        walls = NewMesh.gen_wall( context, wall_loops, wall_section_mesh.copy() )
+
+        winders = NewMesh.gen_windows(context, params_general, params_windows)
+        group.objects.link(winders)
+        apply_positions(winders, layout["window_positions"], group)
+
+        group.objects.link(walls)
         return { "FINISHED" }
 
 
@@ -89,8 +120,7 @@ class MyGenerator(bpy.types.Operator):
         params_cage = NewMesh.ParamsWindowCage.from_ui()
 
         sequence = GenUtils.gen_simple_section_list(params_windows.section_width, params_windows.section_height)
-        m_section = GenUtils.gen_section_mesh(sequence, params_windows.frame_width,
-                                              params_windows.frame_depth)
+        m_section = GenUtils.gen_section_mesh(sequence, params_windows.frame_width, params_windows.frame_depth)
         bm_section = bmesh.new()
         bm_section.from_mesh(m_section)
         '''

@@ -49,8 +49,8 @@ class KWCBuildingParams:
 
 # end KWCBuildingParams
 
-
-def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, footprint: list, door_position: tuple) -> dict:
+# eliminate paramsgeneral for now, build out later
+def kwc_gen_layout( kwc_params: KWCBuildingParams, footprint: list, door_position: tuple) -> dict:
     """
     Generates the layout of windows, pillars and walls
     Args:
@@ -62,13 +62,15 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
         a dictionary with the following keys
             "window_positions" - list(tuple(tuple(x,y,z), rot)) list of tuples, where each item contains the x,y,z
                 position of the window and it's rotation on the z axis.
-            "pillar_positions" - list(tuple(tuple(x,y,z), rot)) list of tuples, where each item contains the x,y,z
-                position of the pillar and it's rotation on the z axis.
             wall_loops - list(list(tuple(x,y,z)) - list, containing a list of verts, ie loops to be used for extruding
                 walls
     """
+
+    TEST_floor_offset = 0.0
+    TEST_floor_height = 3.0
+    TEST_floor_count = 8
+
     window_positions = list()
-    pillar_positions = list()
     wall_loops = list()
     wall_verts = list()
     wall_verts_initial = list()
@@ -85,9 +87,9 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
 
         # push the first vert into the array
         if is_first_loop:
-            wall_verts_initial.append((vert_start[0], vert_start[1], params_general.floor_offset))
+            wall_verts_initial.append((vert_start[0], vert_start[1], TEST_floor_offset))
         else:
-            wall_verts.append((vert_start[0], vert_start[1], params_general.floor_offset))
+            wall_verts.append((vert_start[0], vert_start[1], TEST_floor_offset))
         # end if;
 
         # calculate length of edge
@@ -137,7 +139,7 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
             # calculate window position
             window_pos = ((vert_start[0] + ((length_x - (window_count - 1) * ww_dist_x) / 2) + j * ww_dist_x),
                           (vert_start[1] + ((length_y - (window_count - 1) * ww_dist_y) / 2) + j * ww_dist_y),
-                          params_general.floor_offset
+                          TEST_floor_offset
                           )
 
             # check whether the window intersects with the door, push first floor accordingly
@@ -158,31 +160,31 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
                         (not Utils.vert_check_intersect(vert_2, door_start, door_end))):
                     window_loop = list()
                     window_loop.append(door_end)
-                    window_loop.append((vert_2[0], vert_2[1], params_general.floor_offset))
+                    window_loop.append((vert_2[0], vert_2[1], TEST_floor_offset))
                     wall_loops.append(window_loop)
                 elif(Utils.vert_check_intersect(vert_2, door_start, door_end) and
                      (not Utils.vert_check_intersect(vert_1, door_start, door_end))):
                     window_loop = list()
-                    window_loop.append((vert_1[0], vert_1[1], params_general.floor_offset))
+                    window_loop.append((vert_1[0], vert_1[1], TEST_floor_offset))
                     window_loop.append(door_start)
                     wall_loops.append(window_loop)
                 elif(Utils.vert_check_intersect(window_pos, door_start, door_end) and
                      (not Utils.vert_check_intersect(vert_1, door_start, door_end)) and
                      (not Utils.vert_check_intersect(vert_1, door_start, door_end))):
                     window_loop = list()
-                    window_loop.append((vert_1[0], vert_1[1], params_general.floor_offset))
+                    window_loop.append((vert_1[0], vert_1[1], TEST_floor_offset))
                     window_loop.append(door_start)
                     wall_loops.append(window_loop)
                     window_loop = list()
                     window_loop.append(door_end)
-                    window_loop.append((vert_2[0], vert_2[1], params_general.floor_offset))
+                    window_loop.append((vert_2[0], vert_2[1], TEST_floor_offset))
                     wall_loops.append(window_loop)
             # end if
             """
 
             # push all other floors
-            for floor in range(1, params_general.floor_count + 1):
-                pos = (window_pos[0], window_pos[1], params_general.floor_offset + floor * params_general.floor_height)
+            for floor in range(1, TEST_floor_count + 1):
+                pos = (window_pos[0], window_pos[1], TEST_floor_offset + floor * TEST_floor_height)
                 window_positions.append((pos, rot))
             # end for
 
@@ -192,7 +194,7 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
                 pillar_pos = (
                     window_pos[0] - wp_dist_x,
                     window_pos[1] - wp_dist_y,
-                    params_general.floor_offset
+                    TEST_floor_offset
                 )
 
                 # check whether the pillar intersects with the door, push accordingly
@@ -201,15 +203,15 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
                 # end if
 
                 # push all other floors
-                for floor in range(1, params_general.floor_count+1):
-                    pos = (pillar_pos[0], pillar_pos[1], params_general.floor_offset+floor*params_general.floor_height)
+                for floor in range(1, TEST_floor_count+1):
+                    pos = (pillar_pos[0], pillar_pos[1], TEST_floor_offset+floor*TEST_floor_height)
                     pillar_positions.append((pos, rot))
                 # end for
             # end if
             pillar_pos = (
                 window_pos[0] + wp_dist_x,
                 window_pos[1] + wp_dist_y,
-                params_general.floor_offset
+                TEST_floor_offset
             )
 
             # check whether the pillar intersects with the door, push accordingly
@@ -218,8 +220,8 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
             # end if
 
             # push all other floors
-            for floor in range(1, params_general.floor_count + 1):
-                pos = (pillar_pos[0], pillar_pos[1], params_general.floor_offset + floor * params_general.floor_height)
+            for floor in range(1, TEST_floor_count + 1):
+                pos = (pillar_pos[0], pillar_pos[1], TEST_floor_offset + floor * TEST_floor_height)
                 pillar_positions.append((pos, rot))
             # end for
             """
@@ -227,7 +229,7 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
             # calculate the last vert of this loop, because it is broken by the window
             vert_wall = (window_pos[0] - 0.5 * window_width_x,
                          window_pos[1] - 0.5 * window_width_y,
-                         params_general.floor_offset)
+                         TEST_floor_offset)
             # push it into the loops array
             if is_first_loop:
                 wall_verts_initial.append(vert_wall)
@@ -249,10 +251,10 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
                     wall_loops.append(loop)
 
                 # make a copy of wall_verts for each floor, push for each floor except ground
-                for floor in range(1, params_general.floor_count + 1):
+                for floor in range(1, TEST_floor_count + 1):
                     loop = list()
                     for vert in wall_verts:
-                        loop.append((vert[0], vert[1], params_general.floor_offset + floor*params_general.floor_height))
+                        loop.append((vert[0], vert[1], TEST_floor_offset + floor*TEST_floor_height))
                     wall_loops.append(loop)
                 wall_verts.clear()
             # end if
@@ -260,7 +262,7 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
             # calculate the first vert of the next loop and push it into the loops array
             vert_wall = (window_pos[0] + 0.5 * window_width_x,
                          window_pos[1] + 0.5 * window_width_y,
-                         params_general.floor_offset)
+                         TEST_floor_offset)
             wall_verts.append(vert_wall)
         # end while
 
@@ -283,10 +285,10 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
                 wall_loops.append(loop)
 
             # make a copy of wall_verts for each floor, push for each floor except ground
-            for floor in range(1, params_general.floor_count + 1):
+            for floor in range(1, TEST_floor_count + 1):
                 loop = list()
                 for vert in verts:
-                    loop.append((vert[0], vert[1], params_general.floor_offset + floor * params_general.floor_height))
+                    loop.append((vert[0], vert[1], TEST_floor_offset + floor * TEST_floor_height))
                 wall_loops.append(loop)
             wall_verts.clear()
         # end if
@@ -294,8 +296,7 @@ def kwc_gen_layout( kwc_params: KWCLayoutParams, params_general: ParamsGeneral, 
 
     # put all results in a dictionary and return it
     result = {
-        "window_positions": window_positions,
-        "pillar_positions": pillar_positions,
+        "window_positions": window_positions
         "wall_loops": wall_loops
     }
     return result

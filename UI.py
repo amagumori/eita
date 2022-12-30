@@ -23,13 +23,12 @@ from bpy.props import PointerProperty, FloatProperty, BoolProperty, EnumProperty
 
 class KWCPropertyGroup(PropertyGroup):
 
-    width: FloatProperty(
-            name="building width",
-            default=9.144)    # 30 ft in blender units
-    depth: FloatProperty(
-            name="building depth",
-            default=18.288)   # 60 ft in blender units
-
+    width: IntProperty(
+            name="building width ( room units )",
+            default=1)    # 30 ft in blender units
+    depth: IntProperty(
+            name="building depth ( room units )",
+            default=5)   # 60 ft in blender units
     pane_w: FloatProperty(
             name="pane unit width",
             default=0.6096)  # 24 in

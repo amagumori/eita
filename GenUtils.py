@@ -435,6 +435,15 @@ def gen_section_element_list(params_section: ParamsSection) -> list:
     return sequence
 # end generate_section_element_list
 
+def gen_wall_section_flat( wall_section_height: float ) -> bpy.types.Mesh:
+    verts = list()
+    edges = list()
+    verts.append((0.0, 0.0, 0.0))
+    verts.append((0.0, 0.0, wall_section_height))
+    edges.append((0, 1))
+    wall_section_mesh = bpy.data.meshes.new(name="PBGWallSectionMesh")
+    wall_section_mesh.from_pydata(verts, edges, [])
+    return wall_section_mesh
 
 def gen_wall_section_mesh(wall_type: str, wall_section_height: float, wall_section_size: float, wall_mortar_size: float,
                           wall_row_count: float) -> bpy.types.Mesh:
