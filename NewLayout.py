@@ -343,6 +343,12 @@ def kwc_gen_footprint( general_params: KWCParams, params: KWCBuildingParams ) ->
 
     #depth = random.randint( params.building_width, ( params.building_width * max_depth_ratio ) ) 
 
+    # append a vert for each room boundary
+    # -0.5w, iterate towards -0.5d
+    # -0.5w, iterate towards 0.5d
+    # 0.5d, iterate from -0.5w to 0.5w
+    # 0.5w, iterate from 0.5d to -0.5d
+
     footprint.append( (-0.5 * width, -0.5 * depth, 0 ))
     footprint.append( (-0.5 * width, 0.5 * depth, 0 ))
     footprint.append( (0.5 * width, 0.5 * depth, 0 ))
@@ -352,19 +358,27 @@ def kwc_gen_footprint( general_params: KWCParams, params: KWCBuildingParams ) ->
 
 def kwc_layout( general_params: KWCParams, kwc_params: KWCBuildingParams, footprint: list, door_position: tuple) -> dict:
 
-    building_width = general_params.building_width * general_params.room_w
-    building_depth = general_params.building_depth * general_params.room_w
-
-    floor_count = 8
-    floor_height = 3
     wall_loops = list()
+    window_positions = list()
+
+    # BAD variable names
+    building_width = general_params.width * kwc_params.room_width
+    building_depth = general_params.depth * kwc_params.room_width
+
+    room_w = kwc_params.room_width
+    room_h = kwc_params.room_height
+
+    floor_count = 12
+    #floor_height = 3
+    floor_height = ( general_params.pane_h ) * (kwc_params.above_window + kwc_params.window_height + kwc_params.under_window )
+
     for i in range(0, floor_count):
         floor_print = footprint.copy()
         for j in range(0, len(floor_print) ):
             floor_print[j] = ( (footprint[j][0], footprint[j][1], floor_height * i ) )
         wall_loops.append(floor_print)
 
-    for i in range(0, len(footprint) - 1 ):
+    for i in range(0, len(footprint) ):
 
         vert_start = footprint[i]
         if i == len(footprint) - 1:
@@ -372,37 +386,53 @@ def kwc_layout( general_params: KWCParams, kwc_params: KWCBuildingParams, footpr
         else:
             vert_end = footprint[i+1]
 
+        vec_edge = Utils.vec_from_verts( vert_end, vert_start )
+        vec_0 = mathutils.Vector( (0.0, 1.0, 0.0) )
+        rot = vec_edge.xy.angle_signed(vec_0.xy) - 0.5 * math.pi
+
         length_x = vert_end[0] - vert_start[0]
         length_y = vert_end[1] - vert_start[1]
         length = math.sqrt(length_x * length_x + length_y * length_y)
+
+        room_count = math.floor( length / room_w )
+        if room_count < 0:
+            room_count = 0
 
         # try this
         ww_dist_x = ( room_w / length ) * length_x
         ww_dist_y = ( room_w / length ) * length_y
 
-        if math.isclose( length, building_width ):
-            room_count = general_params.building_width
+        print('len: ', length)
+        #if math.isclose( length, building_width, rel_tol=1 ):
+        print('room count: ', room_count)
+
+        for j in range(0, room_count):
+            offset = ( j * room_w ) - (0.5 * room_w)
+            window_pos = ( ( vert_start[0] + ((length_x - ( room_count-1) * ww_dist_x ) / 2 ) + j*ww_dist_x),
+                          ( vert_start[1] + ((length_y - ( room_count-1) * ww_dist_y ) / 2 ) + j*ww_dist_y),
+                          0)
+            window_positions.append((window_pos, rot))
+
+            for floor in range(1, floor_count ):
+                #pos = ( window_pos[0], window_pos[1], ( floor_height*floor ) + (kwc_params.under_window * general_params.pane_h ) )
+                pos = ( window_pos[0], window_pos[1], ( floor_height*floor ))
+                window_positions.append( (pos, rot) )
+
+        '''
+        if math.isclose( length, building_depth, rel_tol=1):
+            print('depth axis: ', general_params.depth)
+            room_count = general_params.depth
 
             for j in range(0, room_count):
                 offset = ( j * room_w ) - (0.5 * room_w)
                 window_pos = ( ( vert_start[0] + ((length_x - ( room_count-1) * ww_dist_x ) / 2 ) + j*ww_dist_x),
                               ( vert_start[1] + ((length_y - ( room_count-1) * ww_dist_y ) / 2 ) + j*ww_dist_y),
                               0)
-                window_positions.append(window_pos)
-
-        elif math.isclose( length, building_depth ):
-            room_count = general_params.building_depth
-
-            for j in range(0, room_count):
-                offset = ( j * room_w ) - (0.5 * room_w)
-                window_pos = ( ( vert_start[0] + ((length_x - ( room_count-1) * ww_dist_x ) / 2 ) + j*ww_dist_x),
-                              ( vert_start[1] + ((length_y - ( room_count-1) * ww_dist_y ) / 2 ) + j*ww_dist_y),
-                              0)
-                window_positions.append(window_pos)
-
+                window_positions.append((window_pos, rot))
+        
         else:
             print('poo poo pee pee')
-
+        '''
 
     result = {
         "window_positions": window_positions,

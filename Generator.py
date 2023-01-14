@@ -57,40 +57,40 @@ class KWCGenerator( bpy.types.Operator):
         pp = pprint.PrettyPrinter( indent=4 )
         pp.pprint( vars( kwc_building_params ) )
 
-
         footprint = NewLayout.kwc_gen_footprint( kwc_params, kwc_building_params )
          
-        print('print: ', footprint )
+        #print('print: ', footprint )
+        print("is this even reloading the module?")
 
-        # this should all happen AOT
-        bldg_depth = kwc_building_params.building_depth * ( kwc_building_params.room_width * kwc_params.pane_w )        
+        bldg_depth = kwc_params.pane_w * kwc_params.width
+
         # whatever
         door_position = ((0.0, 0.5*bldg_depth, 0.0), 0)
         
-        """
-        floor_count = 8
-        floor_height = 3
+        '''
         wall_loops = list()
         for i in range(0, floor_count):
             floor_print = footprint.copy()
             for j in range(0, len(floor_print) ):
                 floor_print[j] = ( (footprint[j][0], footprint[j][1], floor_height * i ) )
             wall_loops.append(floor_print)
-        """
+        '''
+        
+        # i forgot i had a kwc_gen_layout and kwc_layout function jesus christ.
+        layout = NewLayout.kwc_layout( kwc_params, kwc_building_params, footprint, door_position )
 
-        layout = NewLayout.kwc_gen_layout( kwc_params, kwc_building_params, footprint, door_position )
+        floor_height = ( kwc_params.pane_h ) * (kwc_building_params.above_window + kwc_building_params.window_height + kwc_building_params.under_window )
 
         # just hardcoding floor height in here, stupid
         wall_section_mesh = GenUtils.gen_wall_section_flat(floor_height)
-
         
         #balcony_section = NewMesh.gen_balcony_section()
         #balcony = NewMesh.gen_balcony( context, footprint, balcony_section, True )
         #group.objects.link(balcony)
 
-        walls = NewMesh.gen_wall( context, wall_loops, wall_section_mesh.copy() )
+        walls = NewMesh.gen_wall( context, layout["wall_loops"], wall_section_mesh.copy() )
 
-        winders = NewMesh.gen_windows(context, params_general, params_windows)
+        winders = NewMesh.gen_windows(context, kwc_params, kwc_building_params)
         group.objects.link(winders)
         apply_positions(winders, layout["window_positions"], group)
 
