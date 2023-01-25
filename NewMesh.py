@@ -145,7 +145,7 @@ def kwc_gen_mesh_windows_maj(context: bpy.types.Context,
         layout.append( (0.5*maj_window_width - pane_w, pane_h, 0 ) )
         layout.append( (0.5*maj_window_width, pane_h, 0 ) )
 
-        print('layout: ', layout)
+        #print('layout: ', layout)
 
         verts_grid_glass.append((layout[0][0] - window_width,
                                  layout[0][1] + window_width, 0.0))
@@ -315,8 +315,6 @@ def kwc_gen_mesh_windows_maj(context: bpy.types.Context,
 def gen_wall( context: bpy.types.Context, wall_loops: list, section_mesh = bpy.types.Mesh ) -> bpy.types.Object:
     bm = bmesh.new()
     for loop in wall_loops:
-        print('lup: ', loop)
-        
         mesh = Utils.extrude_along_edges( section_mesh.copy(), loop, True )
         bm.from_mesh(mesh)
 
@@ -507,7 +505,7 @@ def gen_windows(context: bpy.types.Context,
         layout.append( (0.5*width - pane_w, pane_h, 0 ) )
         layout.append( (0.5*width, pane_h, 0 ) )
 
-        print('layout: ', layout)
+        #print('layout: ', layout)
 
         verts_grid_glass.append((layout[0][0] - grill_width,    # hank hill moment
                                  layout[0][1] + grill_width, 0.0))
@@ -518,7 +516,7 @@ def gen_windows(context: bpy.types.Context,
         verts_grid_glass.append((layout[3][0] - grill_width,
                                  layout[2][1] - grill_width, 0.0))
 
-        print(verts_grid_glass)
+        #print(verts_grid_glass)
 
         m_grid_glass.from_pydata( verts_grid_glass, [(0,1), (1,2), (2,3), (3,0)], [(0, 1, 2, 3)])
         m_grid = Utils.extrude_along_edges(m_section.copy(), layout, True)
@@ -1023,7 +1021,7 @@ def get_edges_from_window_positions( context: bpy.types.Context,
     # then move to window_pos + rot
 
     for loc in window_positions:
-        pprint.pprint(loc[1])
+        #pprint.pprint(loc[1])
         edge = list()
 
         first_vert = list()

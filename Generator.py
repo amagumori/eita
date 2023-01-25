@@ -62,7 +62,7 @@ class KWCGenerator( bpy.types.Operator):
         new_print = NewLayout.kwc_footprint( kwc_params, kwc_building_params )
 
         # great variable naming! 
-        the_footprint = new_print.print
+        the_footprint = new_print.footprint
 
         bldg_depth = kwc_params.pane_w * kwc_params.width
 
@@ -79,7 +79,7 @@ class KWCGenerator( bpy.types.Operator):
         '''
         
         # i forgot i had a kwc_gen_layout and kwc_layout function jesus christ.
-        layout = NewLayout.kwc_layout( kwc_params, kwc_building_params, footprint, door_position )
+        layout = NewLayout.kwc_layout( kwc_params, kwc_building_params, new_print, door_position )
 
         floor_height = ( kwc_params.pane_h ) * (kwc_building_params.above_window + kwc_building_params.window_height + kwc_building_params.under_window )
 
@@ -113,9 +113,9 @@ class KWCGenerator( bpy.types.Operator):
 
         # get cross product of window edge to get normal?
         # translate balcony along normal by 0.5 * depth ...?
-        balcony = NewMesh.gen_balcony( context, balcony_extrusion_edge, balcony_section, False )
-        apply_positions( balcony, layout["window_positions"], group )
-        group.objects.link(balcony)
+        #balcony = NewMesh.gen_balcony( context, balcony_extrusion_edge, balcony_section, False )
+        #apply_positions( balcony, layout["window_positions"], group )
+        #group.objects.link(balcony)
 
         group.objects.link(walls)
         return { "FINISHED" }
