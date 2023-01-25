@@ -402,6 +402,29 @@ def gen_wall_offset( context: bpy.types.Context,
     context.collection.objects.link(obj)
     return obj
 
+def gen_awning( context: bpy.types.Context,
+               width: float,
+               section_mesh: bpy.types.Mesh ) -> bpy.types.Object:
+
+    edge = list()
+
+    #v0 = ( (-0.5 * width, 0, 0 ) )
+    #v1 = ( (0.5 * width, 0, 0 ) )
+
+    v0 = ( (0, -0.5 * width, 0  ) )
+    v1 = ( (0, 0.5 * width, 0 ) )
+
+    edge.append(v0)
+    edge.append(v1)
+
+    m = Utils.extrude_along_edges( section_mesh, edge, False )
+
+    obj = bpy.data.objects.new("awning", m )
+    context.collection.objects.link(obj)
+
+    return obj
+
+
 def gen_windows(context: bpy.types.Context, 
                 #params_general: GenLayout.ParamsGeneral,
                 #params_windows: ParamsWindows,
@@ -808,7 +831,7 @@ def gen_awning_from_footprint() -> bpy.types.Mesh:
     awning_profile = GenUtils.gen_plane_profile( awning_profile_list, width )
 
 
-def gen_balcony_section () -> bpy.types.Mesh:
+def gen_balcony_section ( depth ) -> bpy.types.Mesh:
     """
     Generates a mesh from the given list of sectionElements.
 
@@ -823,10 +846,10 @@ def gen_balcony_section () -> bpy.types.Mesh:
     """
 
     width = 1 
-    height = 1 
+    height = 3
 
     thickness = 0.05
-    balcony_depth = 2
+    balcony_depth = depth
     chamfer = 0.03
     balcony_height = 0.6
 
@@ -916,19 +939,22 @@ def gen_window_balcony(context: bpy.types.Context,
     return obj
 # end gen_mesh_floor_separator
 
-def gen_window_awning ( context: bpy.types.Context, params_general: GenLayout.ParamsGeneral ) -> bpy.types.Object:
-    awning_profile_list = GenUtils.gen_awning_section_list( params_general.window_width,
-                                                            0.05,
-                                                            0.05,
-                                                            0.05 )
+def gen_window_awning ( context: bpy.types.Context, 
+                        params: NewLayout.KWCBuildingParams,
+                        general_params: NewLayout.KWCParams ) -> bpy.types.Object:
 
-    awning_profile = GenUtils.gen_plane_profile( awning_profile_list, params_general.window_width )
+    awning_profile_list = GenUtils.gen_awning_section_list( params.window_width * general_params.pane_w ,
+                                                            0.05,
+                                                            0.05,
+                                                            0.1 )
+
+    awning_profile = GenUtils.gen_plane_profile( awning_profile_list, params.window_width * general_params.pane_w )
 
     section = bmesh.new()
     section.from_mesh( awning_profile )
 
     mat_loc = mathutils.Matrix.Translation( ( 0.0, 0.0, 0.0 ) )
-    depth = 1
+    depth = 1.5
     down = 0.2
 
     geo = bmesh.ops.extrude_edge_only( section,
@@ -965,13 +991,15 @@ def gen_window_awning ( context: bpy.types.Context, params_general: GenLayout.Pa
             use_shapekey = False )
 
     #vts = section.verts[:]
+   
+    #test = 0.5 * ( ( params.window_width * general_params.pane_w ) - 
 
     bmesh.ops.translate( section,
-            vec= ( -params_general.window_width, depth, 0.0 ),
+            vec= ( -0.5 * params.window_width * general_params.pane_w, 0.0, 0.0 ),
+                        #vec= ( -0.5 * params.window_width * general_params.pane_w, depth, 0.0 ),
             space= mat_loc,
             verts= vts,
             use_shapekey= False )
-    
 
     m = bpy.data.meshes.new('test_awning')
     section.to_mesh( m )
@@ -982,7 +1010,13 @@ def gen_window_awning ( context: bpy.types.Context, params_general: GenLayout.Pa
 
     return obj
 
-def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayout.ParamsGeneral, window_positions: list ) -> list:
+def get_edges_from_window_positions( context: bpy.types.Context, 
+                                    #params: GenLayout.ParamsGeneral, 
+                                    params: NewLayout.KWCBuildingParams,
+                                    general_params: NewLayout.KWCParams,
+                                    window_positions: list ) -> list:
+
+    pane_width = general_params.pane_w 
     edges = list()
 
     # need to build edges first in same plane as windows
@@ -995,15 +1029,13 @@ def get_edges_from_window_positions( context: bpy.types.Context, params: GenLayo
         first_vert = list()
 
         first_vert = ((
-            0.5 * params.window_width,
-            0.5 * params.window_width,
-            #0.0,
+            0.5 * params.window_width * pane_width,
+            0.5 * params.window_width * pane_width,
             0.0 ))
         second_vert = list()
         second_vert = ((
-            -0.5 * params.window_width,
-            -0.5* params.window_width,
-            #0.0,
+            -0.5 * params.window_width * pane_width,
+            -0.5* params.window_width * pane_width,
             0.0 ))
 
         '''

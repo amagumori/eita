@@ -58,9 +58,11 @@ class KWCGenerator( bpy.types.Operator):
         pp.pprint( vars( kwc_building_params ) )
 
         footprint = NewLayout.kwc_gen_footprint( kwc_params, kwc_building_params )
-         
-        #print('print: ', footprint )
-        print("is this even reloading the module?")
+
+        new_print = NewLayout.kwc_footprint( kwc_params, kwc_building_params )
+
+        # great variable naming! 
+        the_footprint = new_print.print
 
         bldg_depth = kwc_params.pane_w * kwc_params.width
 
@@ -94,8 +96,111 @@ class KWCGenerator( bpy.types.Operator):
         group.objects.link(winders)
         apply_positions(winders, layout["window_positions"], group)
 
+        awning = NewMesh.gen_window_awning( context, kwc_building_params, kwc_params )
+        apply_positions( awning, layout["window_positions"], group )
+
+        depth = 2
+        # extrusion profile and section need to share depth.
+        balcony_section = NewMesh.gen_balcony_section( depth )
+
+
+        balc_edges = NewMesh.get_edges_from_window_positions( context, kwc_building_params, kwc_params, layout["window_positions"] )
+
+        w_width = kwc_building_params.window_width * kwc_params.pane_w 
+
+        balcony_extrusion_edge = balcony_extrusion_profile( depth, w_width )
+
+
+        # get cross product of window edge to get normal?
+        # translate balcony along normal by 0.5 * depth ...?
+        balcony = NewMesh.gen_balcony( context, balcony_extrusion_edge, balcony_section, False )
+        apply_positions( balcony, layout["window_positions"], group )
+        group.objects.link(balcony)
+
         group.objects.link(walls)
         return { "FINISHED" }
+
+class KWCFootprintTest( bpy.types.Operator ):
+    bl_idname = "kwc.footprint"
+    bl_label = "kwc footprint test"
+
+    def invoke( self, context, event):
+        group = bpy.data.collections.get("kwc_group")
+        if not group:
+            bpy.ops.collection.create(name="kwc_group")
+            group = bpy.data.collections.get("kwc_group")
+        # delete all objects from group
+        if group.objects:
+            for obj in group.objects:
+                bpy.data.objects.remove(obj)
+
+        kwc_params = NewLayout.KWCParams.from_ui()
+        kwc_building_params = kwc_params.generate_building_params()
+
+        pp = pprint.PrettyPrinter( indent=4 )
+        pp.pprint( vars( kwc_building_params ) )
+
+        footprint = NewLayout.kwc_gen_footprint( kwc_params, kwc_building_params )
+
+        new_print = NewLayout.kwc_footprint( kwc_params, kwc_building_params )
+
+        # great variable naming! 
+        the_footprint = new_print.footprint
+
+        #balcony_section = NewMesh.gen_balcony_section(2)
+        sec = GenUtils.gen_wall_section_flat(3)
+        #test_list.append( (10,0,0) )
+
+        balcony = NewMesh.gen_balcony(context, the_footprint, sec, False)
+        group.objects.link(balcony)
+
+
+        return { "FINISHED" }
+
+def balcony_extrusion_profile( depth, width ) -> list:
+
+    vert_1 = list()
+    vert_2 = list()
+    vert_3 = list()
+    vert_4 = list()
+
+    vert_1 = ((
+        0.5 * width,
+        -depth,
+        0.0 ))
+
+    vert_2 = ((
+        0.5 * width,
+        0.0,
+        0.0 ))
+    vert_3 = ((
+        -0.5 * width,
+        0.0,
+        0.0 ))
+    vert_4 = ((
+        -0.5 * width,
+        -depth,
+        0.0 ))
+
+    edge = list()
+
+    vec0 = mathutils.Vector( (vert_1[0], vert_1[1], vert_1[2]) )
+    vec1 = mathutils.Vector( (vert_2[0], vert_2[1], vert_2[2]) )
+    vec2 = mathutils.Vector( (vert_3[0], vert_3[1], vert_3[2]) )
+    vec3 = mathutils.Vector( (vert_4[0], vert_4[1], vert_4[2]) )
+
+    first_vert = ( vec0.x, vec0.y, vec0.z )
+    second_vert = ( vec1.x, vec1.y, vec1.z )
+    third_vert = ( vec2.x, vec2.y, vec2.z )
+    fourth_vert = ( vec3.x, vec3.y, vec3.z )
+
+    edge.append( fourth_vert)
+    edge.append( third_vert)
+    edge.append( second_vert )
+    edge.append( first_vert )
+
+    return edge
+    # pee pee poo poo
 
 
 
@@ -172,83 +277,6 @@ class MyGenerator(bpy.types.Operator):
     # end invoke
 # end MyGenerator
 
-"""
-class KWCGenerator(bpy.types.Operator):
-    bl_idname = "pbg.generate_kowloon"
-    bl_label = "generate kwc building"
-
-    def invoke(self, context, event):
-        group = bpy.data.collections.get("kwc_group")
-        if not group:
-            bpy.ops.collection.create(name="kwc_group")
-            group = bpy.data.collections.get("kwc_group")
-        # delete all objects from group
-        for obj in group.objects:
-            bpy.data.objects.remove(obj)
-        
-        params_kwc = NewLayout.KWCLayoutParams.from_ui()
-        #params_section = GenUtils.ParamsSectionFactory.horizontal_separator_params_large()
-        #params_section = GenUtils.ParamsSectionFactory.beppy()
-        print(params_section)
-        params_windows = GenMesh.ParamsWindows.from_ui()
-        params_cage = NewMesh.ParamsWindowCage.from_ui()
-
-        sequence = GenUtils.gen_simple_section_list(params_windows.section_width, params_windows.section_height)
-        m_section = GenUtils.gen_section_mesh(sequence, params_windows.frame_width,
-                                              params_windows.frame_depth)
-        bm_section = bmesh.new()
-        bm_section.from_mesh(m_section)
-        '''
-        mat_loc = mathutils.Matrix.Translation((0.0, 0.0, 0.0))
-        mat_rot = mathutils.Matrix.Rotation(math.radians(-90), 3, "X")
-        vec_trans = (0.0, -params_windows.frame_width, 0.0)
-        bmesh.ops.rotate(bm_section, cent=(0, 0, 0), matrix=mat_rot, verts=bm_section.verts, space=mat_loc)
-        bmesh.ops.translate(bm_section, vec=vec_trans, space=mat_loc, verts=bm_section.verts)
-        bm_section.to_mesh(m_section)
-        '''
-
-        my_window = GenMesh.gen_mesh_windows(context, params_general, params_windows)
-        group.objects.link(my_window)
-        my_window_around = GenMesh.gen_mesh_windows_around(context, params_general, params_windows)
-        my_bar = NewMesh.gen_mesh_window_cage(context, params_cage, params_general)
-
-        # just using these window params as arbitrary values.
-        awning_profile_list = GenUtils.gen_awning_section_list(25, 3, 1, 0.03)
-        awning_profile = GenUtils.gen_plane_profile( awning_profile_list, params_windows.frame_width )
-
-        awning_section = bmesh.new()
-        awning_section.from_mesh(awning_profile)
-
-        m = bpy.data.meshes.new("test")
-        awning_section.to_mesh(m)
-        awning_section.free()
-
-        test_obj = bpy.data.objects.new( "test", m )
-        context.scene.collection.objects.link(test_obj)     
-    
-        '''
-        m = bpy.data.meshes.new("WindowCageBar")
-        my_bar.to_mesh(m)
-        my_bar.free()
-        ob = bpy.data.objects.get("WindowCageBar")
-        if ob is not None:
-            #context.scene.objects.unlink(ob)
-            bpy.data.objects.remove(ob)
-
-        # link the created object to the scene
-        new_obj = bpy.data.objects.new("WindowCageBar", m)
-        context.scene.collection.objects.link(new_obj)
-        '''
-
-        #group.objects.link(my_window)
-        origin = (0,0,0)
-        #apply_positions(my_window, origin, group)
-        return {"FINISHED"}
-    # end invoke
-# end MyGenerator
-"""
-
-
 class FootprintTest(bpy.types.Operator):
     bl_idname = "pbg.test_footprint"
     bl_label = "Test Building Footprint"
@@ -305,7 +333,6 @@ class FootprintTest(bpy.types.Operator):
         #group.objects.link(first_floor)
 
         return {"FINISHED"}
-
 
 class Generator(bpy.types.Operator):
     # TODO: docstring

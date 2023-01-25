@@ -2,6 +2,11 @@ import bpy
 import math
 import random
 import mathutils
+
+import pprint 
+from collections import namedtuple
+from typing import NamedTuple 
+
 from enum import Enum
 from . import Utils
 
@@ -47,6 +52,11 @@ class KWCParams:
         room_w = random.randrange( 8, 14 )
         room_h = random.randrange( 8, 10 )   # this doesn't even need to be random
 
+        #space_between_rooms = 0
+        space_between_rooms = random.randrange(0, room_w)
+
+        print("SPACE BETWEEN: ", space_between_rooms )
+
         # divide vertically - hard constraints like under-window and above-window don't vary much
         under_window = random.randrange(2, 3)
         remaining_space = room_h - under_window
@@ -72,7 +82,7 @@ class KWCParams:
             else:
                 window_above = 0
             """
-        window_around = random.randrange(0, 1)
+        window_around = random.randrange(0, 2)
         window_height = math.floor( room_h - window_above - under_window )
         # full width by default
         window_width = math.floor( room_w - (window_around*2) )
@@ -80,8 +90,9 @@ class KWCParams:
         # don't even do the multiple windows bs 
         # we're going face by face, 1 - 3 windows per and even 3 is a lot
 
-        full_width_window = decide(0.85)
+        full_width_window = decide(0.50)
         if ( full_width_window == True ):
+            window_around = 0
             multiple_windows = False
 
         if ( full_width_window == False ):
@@ -132,6 +143,9 @@ class KWCParams:
                 building_depth,
                 room_w,
                 room_h,
+
+                space_between_rooms,
+
                 window_width,
                 window_height,
                 under_window,
@@ -150,27 +164,6 @@ class KWCParams:
 
 #end KWCParams
 
-class FaceParams:
-    def __init__(self, 
-                 face_type,
-                 room_width,
-                 room_height,
-                 window_width,
-                 window_height,
-                 under_window,
-                 above_window,
-                 around_window):
-
-        self.face_type = face_type
-        self.room_width = room_width
-        self.room_height = room_height
-        self.window_width = window_height
-        self.under_window = under_window
-        self.above_window = above_window
-        self.around_window = around_window
-
-#end FaceParams
-
 class KWCBuildingParams:
     # TODO: docstring
     # this is getting ridiculous.
@@ -179,6 +172,7 @@ class KWCBuildingParams:
                  building_depth,
                  room_width,
                  room_height,
+                 space_between_rooms,
                  window_width,
                  window_height,
                  under_window,
@@ -190,6 +184,9 @@ class KWCBuildingParams:
 
         self.room_width = room_width
         self.room_height = room_height
+
+        self.space_between_rooms = space_between_rooms # space between faces
+
         self.window_width = window_width
         self.window_height = window_height
         self.under_window = under_window
@@ -198,132 +195,281 @@ class KWCBuildingParams:
 
 # end KWCBuildingParams
 
-class ParamsGeneral:
-    # TODO: docstring
-    def __init__(self, floor_count: int, floor_height: float, floor_offset: float, generate_separator: bool,
-                 separator_height: float, separator_width: float, window_width: float, window_height: float,
-                 window_offset: float, distance_window_window: float, generate_pillar: bool,
-                 distance_window_pillar: float, door_width: float, door_height: float):
-        self.floor_count = floor_count
-        self.floor_height = floor_height
-        self.floor_offset = floor_offset
-        self.generate_separator = generate_separator
-        self.separator_height = separator_height
-        self.separator_width = separator_width
-        self.window_width = window_width
-        self.window_height = window_height
-        self.window_offset = window_offset
-        self.distance_window_window = distance_window_window
-        self.generate_pillar = generate_pillar
-        self.distance_window_pillar = distance_window_pillar
-        self.door_width = door_width
-        self.door_height = door_height
-    # end __init__
+class Footprint( NamedTuple ):
+    footprint: list
+    major_faces: list
+    med_faces: list
+    min_faces: list
 
-    @staticmethod
-    def from_ui():
-        properties = bpy.context.scene.PBGPropertyGroup
-        params = ParamsGeneral(
-            floor_count=properties.floor_count,
-            floor_height=properties.floor_height,
-            floor_offset=properties.floor_first_offset,
-            generate_separator=properties.floor_separator_include,
-            separator_height=properties.floor_separator_height,
-            separator_width=properties.floor_separator_width,
-            window_width=properties.window_width,
-            window_height=properties.window_height,
-            window_offset=properties.window_offset,
-            distance_window_window=properties.distance_window_window,
-            generate_pillar=properties.generate_pillar,
-            distance_window_pillar=properties.distance_window_pillar,
-            door_width=properties.door_width,
-            door_height=properties.door_height
-        )
-        return params
-    # end from_ui
-# end ParamsGeneral
+def kwc_footprint( kwc_params: KWCParams, params: KWCBuildingParams ) -> Footprint:
 
-class ParamsFootprint:
-    # TODO: docstring
-    # this is getting ridiculous.
-    def __init__(self, left, bottom, right, top, building_width, building_depth):
+    pp = pprint.PrettyPrinter( indent = 4 )
 
-        self.building_width = building_width
-        self.building_depth = building_depth
-        self.left = left
-        self.top = top
-        self.right = right
-        self.bottom = bottom
+    footprint = list()
 
-    @staticmethod
-    def from_ui():
-        properties = bpy.context.scene.FootprintPropertyGroup
-        params = ParamsFootprint(
-            building_width=properties.building_width,
-            building_depth=properties.building_depth,
-            left=properties.left,
-            top=properties.top,
-            right=properties.right,
-            bottom=properties.bottom
-        )
-        return params
-    # end from_ui
-# end ParamsFootprint
+    major_faces = list()
+    med_faces = list()
+    min_faces = list()
 
-class ParamsFootprintFace:
-    # TODO: docstring
-    def __init__(self, face_type, inset_first_floor):
+    room_w = params.room_width * kwc_params.pane_w
+    room_h = params.room_height * kwc_params.pane_h
+
+    print('room width: ', room_w )
+
+    # i just didn't want to change each one
+    pane_w = kwc_params.pane_w
+
+    # test value
+    inset_between_rooms = kwc_params.pane_w * 4
+    between_rooms_width = params.space_between_rooms * kwc_params.pane_w 
+
+    #width = room_w * params.building_width + ( kwc_params.pane_w * params.space_between_rooms * ( params.building_width - 1 ) )
+    #depth = room_w * params.building_depth + ( kwc_params.pane_w + params.space_between_rooms * ( params.building_depth - 1 ) )
+
+    width = room_w * kwc_params.width + ( kwc_params.pane_w * params.space_between_rooms * ( kwc_params.width - 2 ) )
+    depth = room_w * kwc_params.depth + ( kwc_params.pane_w + params.space_between_rooms * ( kwc_params.depth - 2 ) )
+
+    print('half-width: ', width )
+    print('half-depth: ', depth )
+
+    # silly way to do this, but...
+    last_vert = []
+
+    if params.space_between_rooms > 0:
         
-        # chamfers and broad bldg params need to be passed in 
-        # to not fuck everything
+        marker = -0.5 * depth
+        invariant = -0.5 * width 
 
-        # eventually we will stack footprints for different
-        # building profiles
-        # "bridge_loops" API will be used to bridge bottom footprint loop
-        # to top one.
+        for i in range( 0, kwc_params.depth ):
+            print("i is this", i)
+            print("width  is this", kwc_params.depth )
 
-        #self.curved_corner = curved_corner # bool
-        #self.corner_chamfer = corner_chamfer
-        #self.corner_radius = corner_radius # work on this later.
+            if i == kwc_params.depth - 1:
+                print('we hit the case.')
+                vert_1 = ( -0.5 * width, marker, 0 )
+                min_face = ( tuple(last_vert), vert_1 )
+                min_faces.append( min_face )
+                vert_2 = ( -0.5 * width, marker + room_w, 0 )
+                footprint.append( vert_1 )
+                #footprint.append( vert_2 )
+                break
 
-        self.face_type = face_type # major, med, minor
+            vert_1 = ( -0.5 * width, marker, 0 )
 
-        # doing the inset stuff per side.
-        #self.ff_inset = inset_first_floor  # bool
-        #self.ff_from_edge = inset_first_floor_d_from_edge
-        #self.ff_inset_depth = inset_first_floor_depth
-        #self.ff_inset_chamfer = inset_first_floor_chamfer
+            if len(last_vert) > 0:
+                min_face = ( tuple(last_vert), vert_1 )
+                min_faces.append( min_face )
 
-        self.subface_count = subface_count
-        self.subface_offset = subface_offset
-        self.subface_depth = subface_depth # can be negative and outset
-        self.subface_width = subface_width
+            vert_2 = ( -0.5 * width, marker + room_w, 0 )
 
-    # end init
+            maj = ( vert_1, vert_2 )
 
-    @staticmethod
-    def from_ui():
-        properties = bpy.context.scene.FacePropertyGroup
-        params = ParamsFootprintFace(
+            major_faces.append( maj )
 
-            #curved_corner = properties.curved_corner, # bool
-            #corner_chamfer = properties.corner_chamfer
-            #corner_radius = corner_radius, # work on this later.
+            vert_3 = ( -0.5 * width + inset_between_rooms, marker + room_w, 0 )
 
-            face_type = properties.face_type,
-            
-            #ff_inset = properties.inset_first_floor,  # bool
-            #ff_from_edge = properties.inset_first_floor_d_from_edge,
-            #ff_inset_depth = properties.inset_first_floor_depth,
-            #ff_inset_chamfer = properties.inset_first_floor_chamfer,
+            min_face = ( vert_2, vert_3 )
+            min_faces.append( min_face )
 
-            subface_count = properties.subface_count,
-            subface_offset = properties.subface_offset,
-            subface_depth = properties.subface_depth, # can be negative
-            subface_width = properties.subface_width,
+            vert_4 = ( -0.5 * width + inset_between_rooms, marker + room_w + between_rooms_width, 0 )
 
-        )
-        return params
+            med_face = ( vert_3, vert_4 )
+            med_faces.append( med_face )
+
+            last_vert = list( vert_4 )
+
+            marker += room_w
+            marker += between_rooms_width 
+
+            footprint.append( vert_1 )
+            footprint.append( vert_2 )
+            footprint.append( vert_3 )
+            footprint.append( vert_4 )
+
+        print("value of marker: ", marker )
+        print("target: ", 0.5 * depth )
+
+        marker = -0.5 * width
+        invariant = 0.5 * depth
+
+        for i in range( 0, kwc_params.width ):
+            if i == kwc_params.width - 1:
+                # reset our last-vert memory to nul
+                print(' we hit the right case.')
+                last_vert = []
+                vert_1 = ( marker, invariant, 0 )
+                min_face = ( tuple(last_vert), vert_1 )
+                min_faces.append( min_face )
+                #vert_2 = ( marker + room_w, invariant, 0 )
+                footprint.append( vert_1 )
+                #footprint.append( vert_2 )
+                break
+
+            vert_1 = ( marker, invariant, 0 )
+
+            if len(last_vert) > 0:
+                min_face = ( tuple(last_vert), vert_1 )
+                min_faces.append( min_face )
+
+            vert_2 = ( marker + room_w, invariant, 0 )
+
+            maj = ( vert_1, vert_2 )
+
+            major_faces.append( maj )
+
+            vert_3 = ( marker + room_w, invariant - inset_between_rooms, 0 )
+
+            min_face = ( vert_2, vert_3 )
+            min_faces.append( min_face )
+
+            vert_4 = ( marker + room_w + between_rooms_width, invariant - inset_between_rooms, 0 )
+
+            med_face = ( vert_3, vert_4 )
+            med_faces.append( med_face )
+
+            last_vert = list( vert_4 )
+
+            marker += room_w
+            marker += between_rooms_width 
+
+            footprint.append( vert_1 )
+            footprint.append( vert_2 )
+            footprint.append( vert_3 )
+            footprint.append( vert_4 )
+
+
+        #result = Footprint( footprint, major_faces, med_faces, min_faces )
+        #return result 
+        print('value of marker, x axis', marker )
+        print('value of marker, x axis', marker )
+
+        marker = 0.5 * depth
+        invariant = 0.5 * width
+
+        for i in range( 0, kwc_params.depth ):
+
+            if i == kwc_params.depth - 1:
+                # reset our last-vert memory to nul
+                last_vert = []
+                vert_1 = ( invariant, marker, 0 )
+                min_face = ( tuple(last_vert), vert_1 )
+                min_faces.append( min_face )
+                #vert_2 = ( invariant, marker - room_w, 0 )
+                footprint.append( vert_1 )
+                #footprint.append( vert_2 )
+                break
+
+            vert_1 = ( invariant, marker, 0 )
+
+            if len(last_vert) > 0:
+                min_face = ( tuple(last_vert), vert_1 )
+                min_faces.append( min_face )
+
+            vert_2 = ( invariant, marker - room_w, 0 )
+
+            maj = ( vert_1, vert_2 )
+
+            major_faces.append( maj )
+
+            vert_3 = ( invariant - inset_between_rooms, marker - room_w, 0 )
+
+            min_face = ( vert_2, vert_3 )
+            min_faces.append( min_face )
+
+            vert_4 = ( invariant - inset_between_rooms, marker - room_w - between_rooms_width, 0 )
+
+            med_face = ( vert_3, vert_4 )
+            med_faces.append( med_face )
+
+            last_vert = list( vert_4 )
+
+            marker -= room_w
+            marker -= between_rooms_width 
+
+            footprint.append( vert_1 )
+            footprint.append( vert_2 )
+            footprint.append( vert_3 )
+            footprint.append( vert_4 )
+
+
+        marker = 0.5 * width 
+        invariant = -0.5 * depth
+
+        for i in range( 0, kwc_params.width ):
+
+            if i == kwc_params.width - 1:
+                # reset our last-vert memory to nul
+                last_vert = []
+                vert_1 = ( marker, invariant, 0 )
+                min_face = ( tuple(last_vert), vert_1 )
+                min_faces.append( min_face )
+                #vert_2 = ( marker - room_w, invariant, 0 )
+                footprint.append( vert_1 )
+                #footprint.append( vert_2 )
+                break
+
+            vert_1 = ( marker, invariant, 0 )
+
+            if len(last_vert) > 0:
+                min_face = ( tuple(last_vert), vert_1 )
+                min_faces.append( min_face )
+
+            vert_2 = ( marker - room_w, invariant, 0 )
+
+            maj = ( vert_1, vert_2 )
+
+            major_faces.append( maj )
+
+            vert_3 = ( marker - room_w, invariant + inset_between_rooms, 0 )
+
+            min_face = ( vert_2, vert_3 )
+            min_faces.append( min_face )
+
+            vert_4 = ( marker - room_w - between_rooms_width, invariant + inset_between_rooms, 0 )
+
+            med_face = ( vert_3, vert_4 )
+            med_faces.append( med_face )
+
+            last_vert = list( vert_4 )
+
+            marker -= room_w
+            marker -= between_rooms_width 
+
+            footprint.append( vert_1 )
+            footprint.append( vert_2 )
+            footprint.append( vert_3 )
+            footprint.append( vert_4 )
+
+
+        footprint.append(footprint[0])
+
+        result = Footprint( footprint, major_faces, med_faces, min_faces )
+
+        for j in range(0, len( footprint )):
+            if footprint[j-1]:
+                if footprint[j] == footprint[j-1]:
+                    print("doubled verts: ", footprint[j], footprint[j-1] )
+                    print("total length: ", len(footprint) )
+                    print("doubled verts loca ", j, j-1 )
+
+
+        pp.pprint( result )
+
+        return result 
+
+    fprint = list()
+    major_faces = list()
+    fprint.append( (-0.5 * width, -0.5 * depth, 0 ))
+    fprint.append( (-0.5 * width, 0.5 * depth, 0 ))
+    fprint.append( (0.5 * width, 0.5 * depth, 0 ))
+    fprint.append( (0.5 * width, -0.5 * depth, 0 ))
+     
+    for i in range(0, len(fprint)):
+        major_faces.append(fprint[i])
+
+    result = Footprint( fprint, major_faces, [], [] )
+    return result
+
 
 def kwc_gen_footprint( general_params: KWCParams, params: KWCBuildingParams ) -> list:
 
@@ -332,14 +478,194 @@ def kwc_gen_footprint( general_params: KWCParams, params: KWCBuildingParams ) ->
 
     footprint = list()
 
+    major_faces = list()
+    med_faces = list()
+    min_faces = list()
+
     # max 4:1 width depth ratio
     max_depth_ratio = 4
 
     room_w = params.room_width * general_params.pane_w
     room_h = params.room_height * general_params.pane_h
 
-    width = room_w * params.building_width
-    depth = room_w * params.building_depth
+    # i just didn't want to change each one
+    pane_w = general_params.pane_w
+
+    # test value
+    inset_between_rooms = general_params.pane_w * 4
+    between_rooms_width = params.space_between_rooms * general_params.pane_w 
+
+    width = room_w * params.building_width + ( general_params.pane_w * params.space_between_rooms * ( params.building_width - 1 ) )
+    depth = room_w * params.building_depth + ( general_params.pane_w + params.space_between_rooms * ( params.building_depth - 1 ) )
+
+    if params.space_between_rooms > 0:
+        layout = list()
+
+        layout.append((-0.5 * width, -0.5 * depth, 0))
+
+        marker = -0.5 * depth
+        
+        #room count
+        # bottom left to top left
+        for face in range(0, (general_params.depth) ):
+            # iterating along Y in + direction
+            # don't even worry about chamfer for now.
+            if marker >= 0.5 * depth:
+                break
+
+            layout.append((
+                -0.5 * width,
+                marker + room_w,
+                0 ))
+
+            if ( face == general_params.depth ):
+                break
+
+            layout.append((
+                (-0.5 * width) + inset_between_rooms,
+                marker + room_w,
+                0 ))
+
+            layout.append((
+                (-0.5 * width) + inset_between_rooms,
+                marker + room_w + between_rooms_width,
+                0 ))
+
+            layout.append((
+                -0.5 * width,
+                marker + room_w + between_rooms_width,
+                0 ))
+
+            marker += room_w 
+            marker += between_rooms_width
+
+        # top left
+        
+        
+        layout.append((
+            -0.5 * width,
+            0.5 * depth,
+            0 ))
+        
+
+        marker = -0.5 * width
+
+        for face in range(0, (general_params.width - 1) ):
+            # iterating along X in + direction
+            # don't even worry about chamfer for now.
+            if marker >= 0.5 * width:
+                break
+
+            layout.append((
+                marker + room_w,
+                0.5 * depth,
+                0 ))
+
+            layout.append((
+                marker + room_w,
+                (0.5 * depth) - inset_between_rooms,
+                0 ))
+
+            layout.append((
+                marker + room_w + between_rooms_width,
+                (0.5 * depth) - inset_between_rooms,
+                0 ))
+
+            layout.append((
+                marker + room_w + between_rooms_width,
+                (0.5 * depth),
+                0 ))
+
+            marker += room_w
+            marker += between_rooms_width
+
+        # top right
+        
+        layout.append((
+            0.5 * width,
+            0.5 * depth,
+            0 ))
+        
+
+        marker = 0.5 * depth
+        # right
+        for face in range(0, (general_params.depth )):
+            # iterating along Y in - direction
+            # don't even worry about chamfer for now.
+            if marker <  -0.5 * depth:
+                break
+
+            layout.append((
+                0.5 * width,
+                marker - room_w,
+                0 ))
+
+            if ( face == general_params.depth ):
+                break
+
+            layout.append((
+                (0.5 * width) - inset_between_rooms,
+                marker - room_w,
+                0 ))
+
+            layout.append((
+                (0.5 * width) - inset_between_rooms,
+                marker - room_w - between_rooms_width,
+                0 ))
+
+            layout.append((
+                (0.5 * width),
+                marker - room_w - between_rooms_width,
+                0 ))
+
+            marker -= room_w
+            marker -= between_rooms_width
+
+        # bottom right
+        
+        layout.append((
+            0.5 * width,
+            -0.5 * depth,
+            0 ))
+        
+        
+        marker = 0.5 * width
+
+        # bottom
+        for face in range(0, ( general_params.width - 1 ) ):
+            # iterating along Y in + direction
+            # don't even worry about chamfer for now.
+            if marker <  -0.5 * width:
+                break
+
+            layout.append((
+                marker - room_w,
+                -0.5 * depth,
+                0 ))
+
+            layout.append((
+                marker - room_w,
+                (-0.5 * depth) + inset_between_rooms,
+                0 ))
+
+            layout.append((
+                marker - room_w - between_rooms_width,
+                (-0.5 * depth) + inset_between_rooms,
+                0 ))
+
+            layout.append((
+                marker - room_w - between_rooms_width,
+                (-0.5 * depth),
+                0 ))
+
+            marker -= room_w
+            marker -= between_rooms_width
+
+        layout.append( ( -0.5*width, -0.5 * depth, 0 ) )
+        
+        return layout
+
+
 
     #depth = random.randint( params.building_width, ( params.building_width * max_depth_ratio ) ) 
 
@@ -353,6 +679,7 @@ def kwc_gen_footprint( general_params: KWCParams, params: KWCBuildingParams ) ->
     footprint.append( (-0.5 * width, 0.5 * depth, 0 ))
     footprint.append( (0.5 * width, 0.5 * depth, 0 ))
     footprint.append( (0.5 * width, -0.5 * depth, 0 ))
+    #footprint.append( (-0.5 * width, -0.5 * depth, 0 ))
 
     return footprint
 
@@ -368,7 +695,7 @@ def kwc_layout( general_params: KWCParams, kwc_params: KWCBuildingParams, footpr
     room_w = kwc_params.room_width
     room_h = kwc_params.room_height
 
-    floor_count = 12
+    floor_count = random.randrange(8, 20)   # weeee
     #floor_height = 3
     floor_height = ( general_params.pane_h ) * (kwc_params.above_window + kwc_params.window_height + kwc_params.under_window )
 

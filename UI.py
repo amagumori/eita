@@ -652,6 +652,8 @@ class KWCPanel(Panel):
        
         row = layout.row(align=True)
         row.operator("kwc.generator", text="KWC generator")
+        row_two = layout.row(align=True)
+        row_two.operator("kwc.footprint", text="KWC footprint test")
 
 # end PBGPillarPanel
 

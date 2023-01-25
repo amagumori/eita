@@ -208,7 +208,9 @@ def gen_awning_section_list( total_width, flat_width, circle_width, circle_heigh
         sequence.append(element)
         width += flat_width
         width += circle_width
-      
+     
+
+    print("total awning width: ", width )
     return sequence
 
 
@@ -265,7 +267,7 @@ def gen_plane_profile(sequence: list, width: float ) -> bpy.types.Mesh:
 
     mat_loc = mathutils.Matrix.Translation( (0,0,0) )
     # only scaling on width (Y) for now 
-    bmesh.ops.scale( bm, vec=(1.0, width, 1.0 ), space=mat_loc, verts=bm.verts)
+    #bmesh.ops.scale( bm, vec=(1.0, width, 1.0 ), space=mat_loc, verts=bm.verts)
     bm.to_mesh(m)
     bm.free()
 

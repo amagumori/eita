@@ -43,8 +43,8 @@ if "UI" in locals():
     importlib.reload(UI)
 if "Generator" in locals():
     importlib.reload(Generator)
-if "MyGenerator" in locals():
-    importlib.reload(MyGenerator)
+#if "MyGenerator" in locals():
+    #importlib.reload(MyGenerator)
 if "GenMesh" in locals():
     importlib.reload(GenMesh)
 
@@ -68,6 +68,7 @@ def register():
     bpy.utils.register_class(UI.KWCPropertyGroup)
 
     bpy.utils.register_class( Generator.KWCGenerator )
+    bpy.utils.register_class( Generator.KWCFootprintTest )
 
     bpy.utils.register_class(UI.KWCPanel)
     bpy.types.Scene.KWCPropertyGroup = bpy.props.PointerProperty(type=UI.KWCPropertyGroup)
@@ -87,9 +88,8 @@ def register():
 
     bpy.types.Scene.FacePropertyGroup = bpy.props.PointerProperty(type=UI.FacePropertyGroup)
 
-    bpy.utils.register_class( UI.NewFootprintPanel )
-
     #
+    '''
     bpy.utils.register_class(UI.PBGToolbarGeneralPanel)
     bpy.utils.register_class(UI.PBGToolbarLayoutPanel)
     bpy.utils.register_class(UI.PBGToolbarPillarPanel)
@@ -101,6 +101,7 @@ def register():
     bpy.utils.register_class(UI.PBGToolbarRoofPanel)
     bpy.utils.register_class(UI.PBGToolbarDoorPanel)
     bpy.utils.register_class(UI.PBGToolbarGeneratePanel)
+    '''
     ##
     bpy.utils.register_class(Generator.MyGenerator)
     bpy.utils.register_class(Generator.Generator)
@@ -111,6 +112,9 @@ def unregister():
     del bpy.types.Scene.FootprintPropertyGroup
     del bpy.types.Scene.FacePropertyGroup 
     del bpy.types.Scene.KWCPropertyGroup
+
+    bpy.utils.unregister_class( Generator.KWCGenerator)
+    bpy.utils.unregister_class( Generator.KWCFootprintTest )
 
     bpy.utils.unregister_class(UI.KWCPropertyGroup)
     bpy.utils.unregister_class(UI.KWCPanel)
@@ -123,8 +127,7 @@ def unregister():
     bpy.utils.unregister_class( UI.FacePropertyGroup )
     bpy.utils.unregister_class( UI.FootprintPropertyGroup )
 
-    bpy.utils.unregister_class( UI.NewFootprintPanel )
-
+    '''
     bpy.utils.unregister_class(UI.PBGToolbarGeneralPanel)
     bpy.utils.unregister_class(UI.PBGToolbarLayoutPanel)
     bpy.utils.unregister_class(UI.PBGToolbarPillarPanel)
@@ -136,6 +139,7 @@ def unregister():
     bpy.utils.unregister_class(UI.PBGToolbarRoofPanel)
     bpy.utils.unregister_class(UI.PBGToolbarDoorPanel)
     bpy.utils.unregister_class(UI.PBGToolbarGeneratePanel)
+    '''
     ##
     bpy.utils.unregister_class(UI.PBGToolbarTestFootprint)
     bpy.utils.unregister_class(Generator.MyGenerator)
